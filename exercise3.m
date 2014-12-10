@@ -34,7 +34,6 @@ im = im - median(im(:)) ;
 % Part 3.3: Learning with stochastic gradient descent
 % -------------------------------------------------------------------------
 
-
 % SGD parameters:
 % - numIterations: maximum number of iterations
 % - rate: learning rate

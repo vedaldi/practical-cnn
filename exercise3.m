@@ -16,8 +16,8 @@ im = rgb2gray(im2single(imread('data/dots.jpg'))) ;
 
 figure(1) ; clf ; 
 subplot(1,3,1) ; imagesc(im) ; axis equal ; title('image') ;
-subplot(1,3,2) ; imagesc(pos) ; axis equal ; title('positive points') ;
-subplot(1,3,3) ; imagesc(neg) ; axis equal ; title('negative points') ;
+subplot(1,3,2) ; imagesc(pos) ; axis equal ; title('positive points (blob centres)') ;
+subplot(1,3,3) ; imagesc(neg) ; axis equal ; title('negative points (not a blob)') ;
 colormap gray ; 
 
 % -------------------------------------------------------------------------
@@ -45,7 +45,6 @@ im = im - median(im(:)) ;
 numIterations = 500 ;
 rate = 5 ;
 momentum = 0.9 ;
-energy = zeros(1, numIterations) ;
 shrinkRate = 0.0001 ;
 plotPeriod = 10 ;
 

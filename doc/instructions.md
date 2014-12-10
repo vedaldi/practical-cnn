@@ -15,6 +15,8 @@ $$
    \newcommand{\by}{\mathbf{y}}
    \newcommand{\bz}{\mathbf{z}}
    \newcommand{\bw}{\mathbf{w}}
+   \newcommand{\cP}{\mathcal{P}}
+   \newcommand{\cN}{\mathcal{N}}
    \newcommand{\vc}{\operatorname{vec}}
 $$
 
@@ -224,7 +226,7 @@ $$
 $$
 where $\eta_t \in \mathbb{R}_+$ is the *learning rate*.
 
-### Part 2.1: Theory
+### Part 2.1: theory of backpropagation
 
 The basic computational problem to solve is the calculation of the gradient of the function with respect to the parameter $\bw$. Since $f$ is the composition of several functions, the key ingredient is the *chain rule*:
 $$
@@ -286,7 +288,7 @@ Then the key of the iteration is obtaining the derivatives for layer $l$ given t
 
 > **Question:** Suppose that $f_l$ is the function $\bx_{l+1} = A \bx_{l}$ where $\bx_{l}$ and $\bx_{l+1}$ are column vectors. Suppose that $B = \partial g_{l+1}/\partial \bx_{l+1} $ is given. Derive an expression for $C = \partial g_{l}/\partial \bx_{l}$ and an expression for $D =  \partial g_{l}/\partial \bw_{l}$.
 
-### Part 2.1: Putting it to the practice
+### Part 2.1: Putting backpropagation to the practice
 
 A key feature of MatConvNet and similar neural-netowrk packages is the ability to support back-propagation. In order to do so, lets focus on a single computational block $f$, followed by a function $g$:
 $$
@@ -384,9 +386,156 @@ fprintf(...
   dzdw1_empirical, dzdw1_computed, ...
   abs(1 - dzdw1_empirical/dzdw1_computed)*100) ;
 ```
-  
+ 
+## Part 3: learning a tiny CNN
 
-## Part 3: a simple CNN
+In this part we will learn a very simple CNN. The CNN is composed of exactly two layers: a convolutional layear and a max-pooling layer:
+$$
+\bx_2 = W * \bx_1 + b, \qquad \bx_3 = \operatorname{maxpool}_\rho \bx_2.
+$$
+$W$ contains a single $3\times 3$ square filter, so that $b$ is a scalar. and the input image $\bx=\bx_1$ has a single channel.
+> **Task**
+> 
+> * Open the file `tinycnn.m` and inspect the code. Convince yourself that the code computes the CNN just described.
+> * Look at the paddings used in the code. If the input image $\bx_1$ has dimensions $M\times N$, what is the dimension of the output feature map $\bx_3$?
+> 
+
+In the rest of the section we will learn the CNN parameters in order to extract blob-like structures from images.
+
+### Part 3.1: training data and labels
+
+The first step is to load the image `data/dots.jpg` and to use the supplied `extractBlackBlobs` function to extract all the black dots in the image.
+```matlab
+% Load an image
+im = rgb2gray(im2single(imread('data/dots.jpg'))) ;
+
+% Compute the location of black blobs in the image
+[pos,neg] = extractBlackBlobs(im) ;
+```
+The arrays `pos` and `neg` contain now pixel labels and  will be used as *annotations* for the supervised training of the CNN. These annotations can be visualised as follows:
+```matlab
+figure(1) ; clf ; 
+subplot(1,3,1) ; imagesc(im) ; axis equal ; title('image') ;
+subplot(1,3,2) ; imagesc(pos) ; axis equal ; title('positive points (blob centres)') ;
+subplot(1,3,3) ; imagesc(neg) ; axis equal ; title('negative points (not a blob)') ;
+colormap gray ; 
+```
+
+> **Task:** Inspect `pos` and `neg` and convince yourself that:
+>
+> - `pos` contains a single `true` value in correspondence of each blob centre;
+> - `neg` contains a `true` value for each pixel sufficiently far away from a blob.
+> 
+> Are there pixels for which both `pos` and `neg` evaluate to false?
+
+### Part 3.2: image preprocessing
+
+Before we attempt to train the CNN, the image is pre-processed to remove its mean value. It is also smoothed by applying a Gaussian kernel of standard deviation 3 pixels:
+```matlab
+% Pre-smooth the image
+im = vl_imsmooth(im,3) ;
+
+% Subtract median value
+im = im - median(im(:)) ;
+```
+We will come back to this preprocessing steps later.
+
+### Part 3.3: learning with gradient descent
+
+We will now setup a learning problem to learn $W$ and $b$ to detect black blobs in images. Recall that the CNN computes for each image pixel $(u,v)$ a score $f(\bx;\bw,b)_{(u,v)}$. We would like this score to be:
+
+* at least as large as 1 for any pixel that is marked as a blob centre (`pos` or $(u,v)\in\cP$) and
+* at most zero for any pixel that is marked as being far away from a blob (`neg` or $(u,v)\in\cN$).
+
+We do so by defining and then optimising the following objective function:
+$$
+E(\bw,b) = 
+\frac{\lambda}{2}\|\bw\|^2
++
+\frac{1}{|\cP|}\sum_{(u,v) \in \cP}
+\max\{0, 1 - f(\bx;\bw,b)_{(u,v)}\}
++
+\frac{1}{|\cN|}\sum_{(u,v) \in \cN}
+\max\{0, f(\bx;\bw,b)_{(u,v)}\}.
+$$
+
+> **Questions:**
+> 
+> - What can you say about the score of each pixel if $\lambda=0$ and $E(\bw,b) =0$?
+> - Note that the objective enforces a *marging* between the scores of the positive and negative pixels. How much is this margin?
+
+We can now train the CNN by minimising the objective function with respect to $\bw$ and $b$. We do so by using an algorithm called *gradient descent with momentum*.  Given the current solution $(\bw_t,b_t)$ and update it , this is updated to $(\bw_{t+1},b_t)$ by following the direction of fastest descent as given by the negative gradient $-\nabla E(\bw_t,b_t)$ of the objective. However, gradient updates are smoothed by considering a *momentum* term $(\bar\bw_{t}, \bar\mu_t)$, yielding the update equations
+$$
+ \bar\bw_{t+1} \leftarrow \mu \bar\bw_t + \eta \frac{\partial E}{\partial \bw_t},
+ \qquad
+ \bw_{t+1} \leftarrow \bw_{t} - \bar\bw_t.
+$$
+and similarly for the bias term. Here $\mu$ is the *momentum rate* and $\eta$ the *learning rate*.
+
+> **Questions:**
+>
+> - Explain why the momentum rate must be smaller than 1. What is the effect of having a momentum rate close to 1?
+> - The learning rate establishes how fast the algorithm will try to minimise the objective function. Can you see any problem with a large learning rate?
+
+The parameters of the algorithm are set as follows:
+```Malta
+numIterations = 500 ;
+rate = 5 ;
+momentum = 0.9 ;
+shrinkRate = 0.0001 ;
+plotPeriod = 10 ;
+```
+
+> **Tasks:**
+> 
+> - Inspect the code in the file  `exercise3.m`. Convince yourself that the code is implementing the algorithm described above. Pay particular attention at the forward and backward passes as well as at how the objective function and its derivatives are computed.
+> - Run the algorithm and observe the results. Then answer the following questions:
+>   * The learned filter should resemble the discretisation of a well-known differential operator. Which one? 
+>   * What is the average of the filter values compared to the average of the absolute values?
+> - Run the algorithm again and observe the evolution of the histograms of the score of the positive and negative pixels in relation to the values 0 and 1. Answer the following:
+>   * Is the objective function minimised monotonically?
+>   * As the histograms evolve, can you identify at least two "phases" in the optimisation?
+>   * Once converged, do the score distribute in the manner that you would expect?
+>
+> **Hint:** the `plotPeriod` option can be changed to plot the diagnostic figure with a higher or lower frequency; this can singificantly affect the speed of the algorithm.
+
+### Part 3.4: Experimenting with the tiny CNN
+
+In this part we will experiment with several variants of the network just learned. First, we study the effect of the image smoothing:
+
+> **Task:** Train again the tiny CNN *without smoothing the input image in prerprocessing*. Anser the following questions:
+> 
+>   * Is the learned filter very different from the one learned before?
+>   * If so, can you figure out what "went wrong"?
+>   * Look carefully at the output of the first layer, magnifying with th loupe tool. Is the maximal filter response attained in the middle of each blob?
+>
+> **Hint:** The Laplacian of Gaussian operator responds maximally at the centre of a blob only if the latter matches the blob size. Relate this fact to the combination of pre-smoothing the image and applying the learned $3\times 3$ filter.
+
+Now restore the smoothing but switch off subtracting the median from the input image.
+
+> **Task:** Train again the tiny CNN *without subtracting the median value in prerprocessing*. Anser the following questions:
+>
+>   * Does the algorithm converge?
+>   * Reduce a hundred-fold the learning are and increase the maximum number of iterations by an equal amount. Does it get better?
+>   * Explain why adding a constant to the input image can have such a dramatic effect on the performance of the optimisation.
+>
+> **Hint:** What constraint should the filter $\bw$ satisfy if the filter output should be zero when (i) the input image is zero or (ii) the input image is a large constant? Do you think that ti would be easy for gradient descent to enforce (ii) at all times?
+
+What you have just witnessed is actually a fairly general principle: centering the data usually makes learning problems much better conditioned.
+
+Now we will explore several parameters in the algorithms:
+
+> **Task:** Restore the preprocessing as given in `experiment4.m`.  Try the following:
+>
+> * Try increasing th learning rate `eta`. Can you achieve a better value of the energy in the 500 iterations?
+> * Disable momentum by setting `momentum = 0`. Now try to beat the result obtained above by choosing `eta`. Can you succeed?
+
+Finally, consider the regularization effect of shrinking:
+
+> **Task:** Restore the learning rate and momentum as given in `experiment4.m`. Then increase the shrkincage factor tenfold and a hundred-fold.
+> 
+> - What is the effect on the convergence speed?
+> - What is the effect on the final value of the total objective function and of the average loss part of it?
 
 ## Part 4:
 

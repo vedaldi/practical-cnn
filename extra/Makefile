@@ -9,7 +9,7 @@ pack-all: pack-data pack-code pack
 code=\
 exercise1.m \
 exercise2.m \
-exercise3.m
+exercise3.m \
 README.md \
 vlfeat \
 matconvnet
@@ -19,7 +19,7 @@ doc/images \
 doc/instructions.html
 
 data=\
-data/mnist.mat
+data/dots.jpg
 
 code:=$(addprefix $(CURDIR)/,$(code))
 data:=$(addprefix $(CURDIR)/,$(data))

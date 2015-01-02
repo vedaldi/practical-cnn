@@ -13,19 +13,35 @@
 
 
 googleFontDir="extra/googlefontdirectory"
-fonts=$(echo "$googleFontDir/ofl/*/*.ttf")
 chars="a b c d e f g h i j k l m n o p q r s t u v w x y z"
 
-hg clone https://code.google.com/p/googlefontdirectory/ \
-    -r 3859 \
-    "$googleFontDir"
+# Download Google's fonts
+if test ! -e "$googleFontDir"
+then
+    hg clone https://code.google.com/p/googlefontdirectory/ \
+        -r 4a99da98ba51 \
+        "$googleFontDir"
+fi
+
+# Only get the fonts that have latin-ext encoding
+fontFamilies=$(grep latin-ext "$googleFontDir"/ofl/*/METADATA.json | \
+    sed -E 's#.*ofl/([a-zA-Z0-9]+)/METADATA.*#\1#g')
+echo -n "Found" $(echo "$fontFamilies" | wc -l) "latin font families "
+echo "out of" $(ls $googleFontDir/ofl/*/METADATA.json | wc -l)
+
+fonts=""
+for i in $fontFamilies
+do
+    fonts="$fonts $(echo "$googleFontDir"/ofl/$i/*.ttf)"
+done
+echo "Found" $(echo "$fonts" | wc -w) "fonts"
 
 for i in $fonts
 do
     fontName=$(basename "$i" .ttf)
-    fondDestDir="extra/fonts/$fontName"
+    fontDestDir="extra/fonts/$fontName"
     echo "$fontName"
-    mkdir -p "$fondDestDir"
+    mkdir -p "$fontDestDir"
     for c in $chars
     do
         convert \

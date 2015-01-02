@@ -26,40 +26,7 @@ title('validation chars for ''a''') ;
 % Part 4.2: initialize a CNN architecture
 % -------------------------------------------------------------------------
 
-f=1/100 ;
-net.layers = {} ;
-net.layers{end+1} = struct('type', 'conv', ...
-                           'filters', f*randn(5,5,1,20, 'single'), ...
-                           'biases', zeros(1, 20, 'single'), ...
-                           'stride', 1, ...
-                           'pad', 0) ;
-net.layers{end+1} = struct('type', 'pool', ...
-                           'method', 'max', ...
-                           'pool', [2 2], ...
-                           'stride', 2, ...
-                           'pad', 0) ;
-net.layers{end+1} = struct('type', 'conv', ...
-                           'filters', f*randn(5,5,20,50, 'single'),...
-                           'biases', zeros(1,50,'single'), ...
-                           'stride', 1, ...
-                           'pad', 0) ;
-net.layers{end+1} = struct('type', 'pool', ...
-                           'method', 'max', ...
-                           'pool', [2 2], ...
-                           'stride', 2, ...
-                           'pad', 0) ;
-net.layers{end+1} = struct('type', 'conv', ...
-                           'filters', f*randn(4,4,50,500, 'single'),...
-                           'biases', zeros(1,500,'single'), ...
-                           'stride', 1, ...
-                           'pad', 0) ;
-net.layers{end+1} = struct('type', 'relu') ;
-net.layers{end+1} = struct('type', 'conv', ...
-                           'filters', f*randn(2,2,500,26, 'single'),...
-                           'biases', zeros(1,26,'single'), ...
-                           'stride', 1, ...
-                           'pad', 0) ;
-net.layers{end+1} = struct('type', 'softmaxloss') ;
+net = initializeCharacterCNN() ;
 
 % -------------------------------------------------------------------------
 % Part 4.3: train and evaluate the model
@@ -96,7 +63,6 @@ net.layers(end) = [] ;
 net.imageMean = imageMean ;
 save('data/chars-experiment/charscnn.mat', '-struct', 'net') ;
 
-
 % -------------------------------------------------------------------------
 % Part 4.4: visualize the learned filters
 % -------------------------------------------------------------------------
@@ -105,15 +71,38 @@ figure(2) ; clf ; colormap gray ;
 vl_imarraysc(squeeze(net.layers{1}.filters),'spacing',2)
 axis equal ;
 title('filters in the first layer') ;
- 
+
+% -------------------------------------------------------------------------
+% Part 4.5: train with jitter
+% -------------------------------------------------------------------------
+
+trainOpts.expDir = 'data/chars-jit-experiment' ;
+
+% Initlialize a new network
+net = initializeCharacterCNN() ;
+
+% Call training function in MatConvNet
+[net,info] = cnn_train(net, imdb, @getBatchWithJitter, trainOpts) ;
+
+% Move the CNN back to CPU if it was trained on GPU
+if trainOpts.useGpu
+  net = vl_simplenn_move(net, 'cpu') ;
+end
+
+% Save the result for later use
+net.layers(end) = [] ;
+net.imageMean = imageMean ;
+save('data/chars-experiment/charscnn-jit.mat', '-struct', 'net') ;
+
 % -------------------------------------------------------------------------
 % Part 4.4: apply the model
 % -------------------------------------------------------------------------
 
 % Load network and remove the last layer (loss)
-net = load('data/chars-experiment/charscnn.mat') ;
+% net = load('data/chars-experiment/charscnn.mat') ;
+net = load('data/chars-experiment/charscnn-jit.mat') ;
 
-if 0
+if 1
   im = im2single(rgb2gray(imread('data/string.png'))) ;
   im = 256 * (im - net.imageMean) ;
 else
@@ -135,7 +124,26 @@ keyboard
 % --------------------------------------------------------------------
 function [im, labels] = getBatch(imdb, batch)
 % --------------------------------------------------------------------
-im = 256 * imdb.images.data(:,:,batch) ;
-im = reshape(im, 32, 32, 1, []) ;
+im = imdb.images.data(:,:,batch) ;
+im = 256 * reshape(im, 32, 32, 1, []) ;
 labels = imdb.images.label(1,batch) ;
 
+% --------------------------------------------------------------------
+function [im, labels] = getBatchWithJitter(imdb, batch)
+% --------------------------------------------------------------------
+im = imdb.images.data(:,:,batch) ;
+labels = imdb.images.label(1,batch) ;
+
+n = numel(batch) ;
+train = find(imdb.images.set == 1) ;
+
+sel = randperm(numel(train), n) ;
+im1 = imdb.images.data(:,:,sel) ;
+
+sel = randperm(numel(train), n) ;
+im2 = imdb.images.data(:,:,sel) ;
+
+ctx = [im1(:,17:32,:) im2(:,1:16,:)] ;
+
+im = min(im, ctx) ;
+im = 256 * reshape(im, 32, 32, 1, []) ;

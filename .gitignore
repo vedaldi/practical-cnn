@@ -2,3 +2,6 @@ data/practical-cnn-2015a
 data/practical-cnn-2015a-code-only.tar.gz
 data/practical-cnn-2015a-data-only.tar.gz
 data/practical-cnn-2015a.tar.gz
+extra/fonts
+data/chars-experiment
+charsdb.mat

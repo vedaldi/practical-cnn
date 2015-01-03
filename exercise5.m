@@ -7,7 +7,7 @@ setup ;
 % Part 5.1: load a pretrained model
 % -------------------------------------------------------------------------
 
-net = load('data/imagenet-vgg-m.mat') ;
+net = load('data/imagenet-vgg-verydeep-16.mat') ;
 vl_simplenn_display(net) ;
 
 % -------------------------------------------------------------------------
@@ -26,6 +26,6 @@ res = vl_simplenn(net, im_) ;
 % show the classification result
 scores = squeeze(gather(res(end).x)) ;
 [bestScore, best] = max(scores) ;
-figure(1) ; clf ; imagesc(im) ;
+figure(1) ; clf ; imagesc(im) ; axis image ;
 title(sprintf('%s (%d), score %.3f',...
 net.classes.description{best}, best, bestScore)) ;

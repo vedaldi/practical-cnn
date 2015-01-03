@@ -6,3 +6,5 @@ extra/fonts*
 data/chars-*experiment*
 charsdb.mat
 googlefontdirectory
+imagenet-vgg-verydeep-16.mat
+sentence-lato.png

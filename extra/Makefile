@@ -29,7 +29,9 @@ data=\
 data/dots.jpg \
 data/sentence-lato.png \
 data/charsdb.mat \
-data/vgg-imagenet-verydeep-16.mat
+data/imagenet-vgg-verydeep-16.mat
+
+tarflags=--exclude='.git*'
 
 code:=$(addprefix $(CURDIR)/,$(code))
 data:=$(addprefix $(CURDIR)/,$(data))
@@ -45,20 +47,20 @@ data/$(name).tar.gz: $(deps)
 	ln -sf $(data) data/$(name)/data/
 	ln -sf $(doc) data/$(name)/doc/
 	ln -sf $(code) data/$(name)/
-	tar -C data -czvhf data/$(name).tar.gz $(name)/
+	tar -C data -czvhf data/$(name).tar.gz $(tarflags) $(name)/
 
 data/$(name)-data-only.tar.gz: $(deps)
 	rm -rf data/$(name)
 	mkdir -p data/$(name)/{doc,data}
 	ln -sf $(data) data/$(name)/
-	tar -C data -czvhf data/$(name)-data-only.tar.gz $(name)/
+	tar -C data -czvhf data/$(name)-data-only.tar.gz $(tarflags) $(name)/
 
 data/$(name)-code-only.tar.gz: $(deps)
 	rm -rf data/$(name)
 	mkdir -p data/$(name)/{doc,data}
 	ln -sf $(doc) data/$(name)/doc/
 	ln -sf $(code) data/$(name)/
-	tar -C data -czvhf data/$(name)-code-only.tar.gz $(name)/
+	tar -C data -czvhf data/$(name)-code-only.tar.gz $(tarflags) $(name)/
 
 post-doc:
 	rsync -rvt doc/images $(DSTDOC)/

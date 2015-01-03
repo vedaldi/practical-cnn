@@ -4,7 +4,7 @@ function exercise4()
 setup ;
 
 % -------------------------------------------------------------------------
-% Part 4.1: prepare data
+% Part 4.1: prepare the data
 % -------------------------------------------------------------------------
 
 % Load character dataset
@@ -29,21 +29,20 @@ title('validation chars for ''a''') ;
 net = initializeCharacterCNN() ;
 
 % -------------------------------------------------------------------------
-% Part 4.3: train and evaluate the model
+% Part 4.3: train and evaluate the CNN
 % -------------------------------------------------------------------------
 
 trainOpts.batchSize = 100 ;
-trainOpts.numEpochs = 100 ;
+trainOpts.numEpochs = 15 ;
 trainOpts.continue = true ;
 trainOpts.useGpu = false ;
 trainOpts.learningRate = 0.001 ;
-trainOpts.numEpochs = 15 ;
 trainOpts.expDir = 'data/chars-experiment' ;
 
 % Take the average image out
+imdb = load('data/charsdb.mat') ;
 imageMean = mean(imdb.images.data(:)) ;
 imdb.images.data = imdb.images.data - imageMean ;
-%bsxfun(@minus, imdb.images.data, mean(imdb.images.data,3)) ;
 
 % Convert to a GPU array if needed
 if trainOpts.useGpu
@@ -53,7 +52,7 @@ end
 % Call training function in MatConvNet
 [net,info] = cnn_train(net, imdb, @getBatch, trainOpts) ;
 
-% Move the CNN back to CPU if it was trained on GPU
+% Move the CNN back to the CPU if it was trained on the GPU
 if trainOpts.useGpu
   net = vl_simplenn_move(net, 'cpu') ;
 end
@@ -69,13 +68,36 @@ save('data/chars-experiment/charscnn.mat', '-struct', 'net') ;
 
 figure(2) ; clf ; colormap gray ;
 vl_imarraysc(squeeze(net.layers{1}.filters),'spacing',2)
-axis equal ;
-title('filters in the first layer') ;
+axis equal ; title('filters in the first layer') ;
 
 % -------------------------------------------------------------------------
-% Part 4.5: train with jitter
+% Part 4.5: apply the model
 % -------------------------------------------------------------------------
 
+% Load the CNN learned before
+net = load('data/chars-experiment/charscnn.mat') ;
+%net = load('data/chars-experiment/charscnn-jit.mat') ;
+
+% Load the sentence
+im = im2single(imread('data/sentence-lato.png')) ;
+im = 256 * (im - net.imageMean) ;
+
+% Apply the CNN to the larger image
+res = vl_simplenn(net, im) ;
+
+% Visualize the results
+figure(3) ; clf ;
+decodeCharacters(net, imdb, im, res) ;
+
+% -------------------------------------------------------------------------
+% Part 4.6: train with jitter
+% -------------------------------------------------------------------------
+
+trainOpts.batchSize = 100 ;
+trainOpts.numEpochs = 15 ;
+trainOpts.continue = true ;
+trainOpts.useGpu = false ;
+trainOpts.learningRate = 0.001 ;
 trainOpts.expDir = 'data/chars-jit-experiment' ;
 
 % Initlialize a new network
@@ -94,32 +116,9 @@ net.layers(end) = [] ;
 net.imageMean = imageMean ;
 save('data/chars-experiment/charscnn-jit.mat', '-struct', 'net') ;
 
-% -------------------------------------------------------------------------
-% Part 4.4: apply the model
-% -------------------------------------------------------------------------
-
-% Load network and remove the last layer (loss)
-% net = load('data/chars-experiment/charscnn.mat') ;
-net = load('data/chars-experiment/charscnn-jit.mat') ;
-
-if 1
-  im = im2single(rgb2gray(imread('data/string.png'))) ;
-  im = 256 * (im - net.imageMean) ;
-else
-  im = 256 * imdb.images.data(:,:,2) ;
-  im = 256 * reshape(imdb.images.data(:,:,1:10),32,[]) ;
-end
-%im = 256 * (im - net.imageMean) ;
-
-res = vl_simplenn(net, im) ;
-
-% decode
-for i=1:size(res(end).x,2)
-  [score(i),pred(i)] = max(squeeze(res(end).x(1,i,:))) ;
-end
-
-fprintf('interpretation: %s\n', imdb.meta.classes(pred)) ;
-keyboard
+% Visualize the results on the sentence
+figure(4) ; clf ;
+decodeCharacters(net, imdb, im, vl_simplenn(net, im)) ;
 
 % --------------------------------------------------------------------
 function [im, labels] = getBatch(imdb, batch)
@@ -143,7 +142,23 @@ im1 = imdb.images.data(:,:,sel) ;
 sel = randperm(numel(train), n) ;
 im2 = imdb.images.data(:,:,sel) ;
 
-ctx = [im1(:,17:32,:) im2(:,1:16,:)] ;
+ctx = [im1 im2] ;
+ctx(:,17:48,:) = min(ctx(:,17:48,:), im) ;
 
-im = min(im, ctx) ;
+dx = randi(11) - 6 ;
+im = ctx(:,(17:48)+dx,:) ;
+sx = (17:48) + dx ;
+
+dy = randi(5) - 2 ;
+sy = max(1, min(32, (1:32) + dy)) ;
+
+im = ctx(sy,sx,:) ;
+
+% Visualize the batch:
+% figure(100) ; clf ;
+% vl_imarraysc(im) ;
+
 im = 256 * reshape(im, 32, 32, 1, []) ;
+
+
+

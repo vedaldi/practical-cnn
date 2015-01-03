@@ -36,6 +36,7 @@ do
 done
 echo "Found" $(echo "$fonts" | wc -w) "fonts"
 
+# Generate 32x32 images of each character a-z for each font
 for i in $fonts
 do
     fontName=$(basename "$i" .ttf)

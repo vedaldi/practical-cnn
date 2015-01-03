@@ -44,15 +44,11 @@ pre-built binaries, but MatConvNet does not.
 1. From Bash:
    1. Run `./extras/download.sh`. This will download the
       `imagenet-vgg-verydeep-16.mat` model as well as a binary
-      copy of the VLFeat library.
+      copy of the VLFeat library and a copy of MatConvNet.
    2. Run `./extra/genfonts.sh`. This will download the Google Fonts
       and extract them as PNG files.
    3. Run `./extra/genstring.sh`. This will create
       `data/sentence-lato.png`.
-   4. If you downloaded the practical as a Git repository, run `git
-      submodule update -i matconvnet`. This will download the
-      MatConvNet library. Otherwise install MatConvNet in
-      `./matconvnet` and `./vlfeat`.
 2. From MATLAB run `addpath extra ; packFonts ;`. This will create
    `data/charsdb.mat`.
 3. Test the practical: from MATLAB run all the exercises in order.

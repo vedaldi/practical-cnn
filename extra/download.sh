@@ -8,3 +8,10 @@ then
     tar xzvf data/vlfeat-0.9.19-bin.tar.gz
     mv vlfeat-0.9.19 vlfeat
 fi
+
+if test ! -e matconvnet
+then
+    wget http://www.vlfeat.org/matconvnet/download/matconvnet-1.0-beta8.tar.gz \--output-document=data/matconvnet.tar.gz --continue --show-progress
+    tar xzvf data/matconvnet.tar.gz
+    mv matconvnet-1.0-beta8 matconvnet
+fi

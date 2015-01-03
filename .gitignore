@@ -10,3 +10,5 @@ imagenet-vgg-verydeep-16.mat
 sentence-lato.png
 data/vlfeat*
 vlfeat/
+matconvnet/
+data/matconvnet*

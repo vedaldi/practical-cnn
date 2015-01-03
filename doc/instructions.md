@@ -400,7 +400,9 @@ $W$ contains a single $3\times 3$ square filter, so that $b$ is a scalar. and th
 > * Look at the paddings used in the code. If the input image $\bx_1$ has dimensions $M\times N$, what is the dimension of the output feature map $\bx_3$?
 > 
 
-In the rest of the section we will learn the CNN parameters in order to extract blob-like structures from images.
+In the rest of the section we will learn the CNN parameters in order to extract blob-like structures from images, such as the ones in the following image:
+
+<img width=350px src="images/dots.jpg" alt="sentence-lato"/>
 
 ### Part 3.1: training data and labels
 

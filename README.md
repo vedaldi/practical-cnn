@@ -1,10 +1,15 @@
 Convolutional neural network practical
 ======================================
 
-> A computer vision practical by the Oxford Visual Geometry group,
-> authored by Andrea Vedaldi and Andrew Zisserman.
+A computer vision practical by the Oxford Visual Geometry group,
+authored by Andrea Vedaldi and Andrew Zisserman.
 
 Start from `doc/instructions.html`.
+
+> Note that this practical requires compiling the (included)
+> MatConvNet library. This should happen automatically (see the
+> `setup.m` script), but make sure that the compilation succeeds on
+> the laboratory computers.
 
 Package contents
 ----------------
@@ -16,7 +21,7 @@ files:
 * `exercise2.m` -- Part 2: Derivatives and backpropagation
 * `exercise3.m` -- Part 3: Learning a tiny CNN
 * `exercise4.m` -- Part 4: Learning a CNN to recognize characters
-* `exercise5.m` -- Part V: Train your own object detector
+* `exercise5.m` -- Part 5: Using a pretrained CNN
 
 The practical runs in MATLAB and uses
 [MatConvNet](http://www.vlfeat.org/matconvnet) and
@@ -25,6 +30,8 @@ MATLAB functions:
 
 * `extractBlackBlobs.m`: extract black blobs from an image.
 * `tinycnn.m`: implements a very simple CNN.
+* `initializeCharacterCNN.m`: initialize a CNN to recognize characters.
+* `decodeCharacters.m`: visualize the output of the character CNN.
 * `setup.m`: setup MATLAB environment.
 
 Appendix: Installing from scratch
@@ -33,19 +40,32 @@ Appendix: Installing from scratch
 The practical requires both VLFeat and MatConvNet. VLFeat comes with
 pre-built binaries, but MatConvNet does not.
 
-1. From Bash, run `./extras/download.sh`. This will download the
-   German Street Sign Benchmark data and VLFeat.
-2. From MATLAB, run `addpath extras ; prepareLabData.m`.
+0. Set the current directory to the practical base directory.
+1. From Bash:
+   1. Run `./extras/download.sh`. This will download the
+      `imagenet-vgg-verydeep-16.mat` model.
+   2. Run `./extra/genfonts.sh`. This will download the Google Fonts
+      and extract them as PNG files.
+   3. Run `./extra/genstring.sh`. This will create
+      `data/sentence-lato.png`.
+   4. If you downloaded the practical as a Git repository, run `git
+      submodule update -i`. This will download the VLFeat and
+      MatConvNet libraries. Otherwise install these two libraries in
+      `./matconvnet` and `./vlfeat`.
+   5. Compile VLFeat (`cd vlfeat ; make`).
+2. From MATLAB run `addpath extra ; packFonts ;`. This will create
+   `data/charsdb.mat`.
+3. Test the practical: from MATLAB run all the exercises in order.
 
 Changes
 -------
 
-* *2014a* - Initial edition
+* *2015a* - Initial edition
 
 License
 -------
 
-    Copyright (c) 2011-13 Andrea Vedaldi
+    Copyright (c) 2015 Andrea Vedaldi
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -66,4 +86,3 @@ License
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
     DEALINGS IN THE SOFTWARE.
-Empty

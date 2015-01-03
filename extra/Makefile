@@ -7,9 +7,16 @@ DSTDOC = vgg@login.robots.ox.ac.uk:WWW/practicals/cnn
 pack-all: pack-data pack-code pack
 
 code=\
+decodeCharacters.m \
 exercise1.m \
 exercise2.m \
 exercise3.m \
+exercise4.m \
+exercise5.m \
+extractBlackBlobs.m \
+initializeCharacterCNN.m \
+setup.m \
+tinycnn.m \
 README.md \
 vlfeat \
 matconvnet
@@ -19,7 +26,10 @@ doc/images \
 doc/instructions.html
 
 data=\
-data/dots.jpg
+data/dots.jpg \
+data/sentence-lato.png \
+data/charsdb.mat \
+data/vgg-imagenet-verydeep-16.mat
 
 code:=$(addprefix $(CURDIR)/,$(code))
 data:=$(addprefix $(CURDIR)/,$(data))

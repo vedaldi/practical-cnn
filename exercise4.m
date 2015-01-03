@@ -14,12 +14,12 @@ imdb = load('data/charsdb.mat') ;
 figure(1) ; clf ; colormap gray ;
 subplot(1,2,1) ;
 vl_imarraysc(imdb.images.data(:,:,imdb.images.label==1 & imdb.images.set==1)) ;
-axis equal ;
+axis image off ;
 title('training chars for ''a''') ;
 
 subplot(1,2,2) ;
 vl_imarraysc(imdb.images.data(:,:,imdb.images.label==1 & imdb.images.set==2)) ;
-axis equal ;
+axis image off ;
 title('validation chars for ''a''') ;
 
 % -------------------------------------------------------------------------

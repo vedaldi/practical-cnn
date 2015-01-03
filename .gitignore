@@ -8,3 +8,5 @@ charsdb.mat
 googlefontdirectory
 imagenet-vgg-verydeep-16.mat
 sentence-lato.png
+data/vlfeat*
+vlfeat/

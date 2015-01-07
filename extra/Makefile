@@ -35,6 +35,7 @@ tarflags=--exclude='.git*'
 
 code:=$(addprefix $(CURDIR)/,$(code))
 data:=$(addprefix $(CURDIR)/,$(data))
+doc:=$(addprefix $(CURDIR)/,$(doc))
 deps:=$(shell find $(code) $(doc) $(data) -type f | sed "s/ /\\\\ /g")
 
 pack: $(TMPDIR)/$(name).tar.gz

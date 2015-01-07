@@ -75,4 +75,4 @@ clean:
 	find . -name '*~' -delete
 
 distclean: clean
-	rm -f data/$(name)*.tar.gz
+	rm -f $(TMPDIR)/$(name)*.tar.gz

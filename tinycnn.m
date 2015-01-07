@@ -2,7 +2,7 @@ function res = tinycnn(x, w, b, dzdy)
 % TINYCNN  A very simple CNN
 %   RES = TINYCNN(X, W, B) evaluates a CNN with two layers: linear
 %   filtering and max pooling. W is a QxQ filter and B its (scalar) bias
-%   and X a MxN input image. 
+%   and X a MxN input image.
 %
 %   RES = TINYCNN(X, W, B, DZDY) backpropagates the CNN loss derivative DZDY
 %   thorugh the network.
@@ -27,7 +27,7 @@ res.x3 = vl_nnpool(res.x2, rho2, 'pad', pad2) ;
 % Backward pass (only if passed output derivative)
 if nargin > 3
   res.dzdx3 = dzdy ;
-  res.dzdx2 = vl_nnpool(res.x2, rho2, res.dzdx3, 'pad', pad2) ; 
+  res.dzdx2 = vl_nnpool(res.x2, rho2, res.dzdx3, 'pad', pad2) ;
   [res.dzdx1, res.dzdw, res.dzdb] = ...
     vl_nnconv(res.x1, w, b, res.dzdx2, 'pad', pad1) ;
 end

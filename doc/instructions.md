@@ -1,4 +1,4 @@
-# VGG Convolutional Neural Netwroks Practrical
+# VGG Convolutional Neural Networks Practical
 
 *By Andrea Vedaldi and Andrew Zisserman*
 
@@ -8,7 +8,7 @@ This is an [Oxford Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg) compu
 
 *Convolutional neural networks* are an important class of learnable representations applicable, among others, to numerous computer vision problems. Deep CNNs, in particular, hare composed of several layers of processing, each involving linear as well as non-linear operators, that are learned jointly, in an end-to-end manner, to solve a particular tasks. Such methods become the predominant for feature extraction from audiovisual and textual data.
 
-This practical explores the basics of learning (deep) CNNs. The first part introduces typical CNN building blocks, such as ReLU units and linear filters, with a particular emphasis on understanding back-propagation. The second part looks at learning two basic CNNs. The first one is a simple non-linear filetr capturing particular image structures, while the second one is a network that recognises typewritten characters (using a variety of different fonts). These examples illustrate the use of stochastic gradient descent with momentum, the definition of an objective function, the construction of mini-batches of data, and data jittering. The last part shows how powerful CNN models can be downloaded off-the-shelf and used directly in applications, bypassing the expensive trianing process.
+This practical explores the basics of learning (deep) CNNs. The first part introduces typical CNN building blocks, such as ReLU units and linear filters, with a particular emphasis on understanding back-propagation. The second part looks at learning two basic CNNs. The first one is a simple non-linear filter capturing particular image structures, while the second one is a network that recognises typewritten characters (using a variety of different fonts). These examples illustrate the use of stochastic gradient descent with momentum, the definition of an objective function, the construction of mini-batches of data, and data jittering. The last part shows how powerful CNN models can be downloaded off-the-shelf and used directly in applications, bypassing the expensive training process.
 
 [TOC]
 
@@ -98,7 +98,7 @@ $$
 
 > **Task:** check that the size of the variable `y` matches your calculations.
 
-We can now visualize the output `y` of the convolution. In order to do this, use the [`vl_imarraysc`](http://www.vlfeat.org/matlab/vl_imarraysc.html) function to display an image for each feature channel in `y`:
+We can now visualise the output `y` of the convolution. In order to do this, use the [`vl_imarraysc`](http://www.vlfeat.org/matlab/vl_imarraysc.html) function to display an image for each feature channel in `y`:
 ```matlab
 % Visualize the output y
 figure(2) ; clf ; vl_imarraysc(y) ; colormap gray ;
@@ -143,7 +143,7 @@ imagesc(-abs(y_lap)) ; title('- abs(filter output)') ;
 
 ### Part 1.2: non-linear gating {#part1.2}
 
-As we have stated in the introduction, CNNs are obtained by composing several different functions. In addition to the linear filters shown in the [previous part](#part1.1), there are several non-linear convolutonal operators as well.
+As we have stated in the introduction, CNNs are obtained by composing several different functions. In addition to the linear filters shown in the [previous part](#part1.1), there are several non-linear convolutional operators as well.
 
 > **Question:** Some of the functions in a CNN *must* be non-linear. Why?
 
@@ -222,13 +222,13 @@ L(\bw) = \frac{1}{n} \sum_{i=1}^n \ell(\bz_i, f(\bx_i;\bw))
 $$
 Note that the composition of the function $f$ with the loss $\ell$ can be though of as a CNN with one more layer (called a *loss layer*). Hence, with a slight abuse of notation, in the rest of this part we incorporate the loss in the function $f$ (which therefore is a map $\mathcal{X}\rightarrow\mathbb{R}$) and do not talk about it explicitly anymore.
 
-The simplest algorithm to minimse $L$, and in fact one that is used in practice, is *gradient descent*. The idea is simple: compute the gradient of the objective $L$ at a current solution $\bw^t$ and then update the latter along the direction of fastest descent of $L$:
+The simplest algorithm to minimise $L$, and in fact one that is used in practice, is *gradient descent*. The idea is simple: compute the gradient of the objective $L$ at a current solution $\bw^t$ and then update the latter along the direction of fastest descent of $L$:
 $$
  \bw^{t+1} = \bw^{t} - \eta_t \frac{\partial f}{\partial \bw}(\bw^t)
 $$
 where $\eta_t \in \mathbb{R}_+$ is the *learning rate*.
 
-### Part 2.1: theory of backpropagation
+### Part 2.1: theory of back-propagation
 
 The basic computational problem to solve is the calculation of the gradient of the function with respect to the parameter $\bw$. Since $f$ is the composition of several functions, the key ingredient is the *chain rule*:
 $$
@@ -245,7 +245,7 @@ $$
   \frac{\partial \vc f_l}{\partial \bw_l^\top}
 \end{align}
 $$
-The notation requires some explanation. Recall that each function $f_l$ is a map from a $M\times N\times K$ array to a $M' \times N' \times K'$ array. The operator $\vc$ *vectorises* such arrays by stacking their elments in a column vector (the stacking order is arbitrary but conventionally column-major). The symbol $\partial \vc f_l / \partial \vc \bx_l^\top$ then denotes the derivative of a column vector of output variables by a row vector of input variables. Note that $\bw_l$ is already assumed to be a column vector so it does not require explicit vectorisation.
+The notation requires some explanation. Recall that each function $f_l$ is a map from a $M\times N\times K$ array to a $M' \times N' \times K'$ array. The operator $\vc$ *vectorises* such arrays by stacking their elements in a column vector (the stacking order is arbitrary but conventionally column-major). The symbol $\partial \vc f_l / \partial \vc \bx_l^\top$ then denotes the derivative of a column vector of output variables by a row vector of input variables. Note that $\bw_l$ is already assumed to be a column vector so it does not require explicit vectorisation.
 
 > **Questions:** Make sure you understand the structure of this formula and answer the following:
 > 
@@ -253,7 +253,7 @@ The notation requires some explanation. Recall that each function $f_l$ is a map
 > * The formula can be rewritten with a slightly different notation by replacing the symbols $f_l$ with the symbols $\bx_{l+1}$. If you do so, do you notice any formal cancelation?
 > * The formula only includes the derivative symbols. However, these derivatives must be computed at a well defined point. What is this point?
 
-To apply the chain rule we must be able to compute, for each function $l$, its derivative with respect to the parameters $\bw_l$ as well as its input $\bx_l$. While this could be done naively, a problem is the very high dimensionality of the matrices involved in this calculation as these are $M'N'K' \times MNK$ arrays. We will now introduce a ``trick'' that allows reducing this to working with $MNK$ numbers only and which will yield to the *backpropagation algorithm*. 
+To apply the chain rule we must be able to compute, for each function $l$, its derivative with respect to the parameters $\bw_l$ as well as its input $\bx_l$. While this could be done naively, a problem is the very high dimensionality of the matrices involved in this calculation as these are $M'N'K' \times MNK$ arrays. We will now introduce a ``trick'' that allows reducing this to working with $MNK$ numbers only and which will yield to the *back-propagation algorithm*. 
 
 The key observation is that we ear not after $\partial \vc f_l / \partial \bw_l^\top$ but after $\partial f/ \partial\bw_l^\top$:
 $$
@@ -264,7 +264,7 @@ $$
 $$
 where $g_{l+1} = f_L \circ \dots \circ f_{l+1}$ is the ``tail'' of the CNN.
 
-> **Question:** Explain why the diemnsions of the vectors $\partial g_{l+1}/\partial \vc \bx_{l+1}$ and $\partial f/\partial \bw_{l}$ equals the number of elements in $\bx_{l+1}$ and $\bw_l$ respectively. Hence, in particular, the symbol $\partial g_{l+1}/\partial \bx_{l+1}$ (without vectorisation) denotes an array with the same size of $\bx_{l+1}$.
+> **Question:** Explain why the dimensions of the vectors $\partial g_{l+1}/\partial \vc \bx_{l+1}$ and $\partial f/\partial \bw_{l}$ equals the number of elements in $\bx_{l+1}$ and $\bw_l$ respectively. Hence, in particular, the symbol $\partial g_{l+1}/\partial \bx_{l+1}$ (without vectorisation) denotes an array with the same size of $\bx_{l+1}$.
 > 
 > **Hint:** recall that the last layer is the loss.
 
@@ -290,9 +290,9 @@ Then the key of the iteration is obtaining the derivatives for layer $l$ given t
 
 > **Question:** Suppose that $f_l$ is the function $\bx_{l+1} = A \bx_{l}$ where $\bx_{l}$ and $\bx_{l+1}$ are column vectors. Suppose that $B = \partial g_{l+1}/\partial \bx_{l+1} $ is given. Derive an expression for $C = \partial g_{l}/\partial \bx_{l}$ and an expression for $D =  \partial g_{l}/\partial \bw_{l}$.
 
-### Part 2.1: putting backpropagation to the practice
+### Part 2.1: putting back-propagation to the practice
 
-A key feature of MatConvNet and similar neural-netowrk packages is the ability to support back-propagation. In order to do so, lets focus on a single computational block $f$, followed by a function $g$:
+A key feature of MatConvNet and similar neural network packages is the ability to support back-propagation. In order to do so, lets focus on a single computational block $f$, followed by a function $g$:
 $$
  \bx
  \longrightarrow 
@@ -366,7 +366,7 @@ dzdx3 = randn(size(x3), 'single') ;
 dzdx2 = vl_nnpool(x2, rho2, dzdx3) ;
 [dzdx1, dzdw1] = vl_nnconv(x1, w1, [], dzdx2) ;
 ```
-> **Question:** Note that the last derivative in the CNN is `dzdx3`. Here, for the sake of the example, this derivative is initalized randomly. In a practical application, what would this derivative represent?
+> **Question:** Note that the last derivative in the CNN is `dzdx3`. Here, for the sake of the example, this derivative is initialised randomly. In a practical application, what would this derivative represent?
 
 We can now use the same technique as before to check that the derivative computed through back-propagation are correct.
 
@@ -391,7 +391,7 @@ fprintf(...
  
 ## Part 3: learning a tiny CNN
 
-In this part we will learn a very simple CNN. The CNN is composed of exactly two layers: a convolutional layear and a max-pooling layer:
+In this part we will learn a very simple CNN. The CNN is composed of exactly two layers: a convolutional layer and a max-pooling layer:
 $$
 \bx_2 = W * \bx_1 + b, \qquad \bx_3 = \operatorname{maxpool}_\rho \bx_2.
 $$
@@ -466,7 +466,7 @@ $$
 > **Questions:**
 > 
 > - What can you say about the score of each pixel if $\lambda=0$ and $E(\bw,b) =0$?
-> - Note that the objective enforces a *marging* between the scores of the positive and negative pixels. How much is this margin?
+> - Note that the objective enforces a *margin* between the scores of the positive and negative pixels. How much is this margin?
 
 We can now train the CNN by minimising the objective function with respect to $\bw$ and $b$. We do so by using an algorithm called *gradient descent with momentum*.  Given the current solution $(\bw_t,b_t)$ and update it , this is updated to $(\bw_{t+1},b_t)$ by following the direction of fastest descent as given by the negative gradient $-\nabla E(\bw_t,b_t)$ of the objective. However, gradient updates are smoothed by considering a *momentum* term $(\bar\bw_{t}, \bar\mu_t)$, yielding the update equations
 $$
@@ -501,7 +501,7 @@ plotPeriod = 10 ;
 >   * As the histograms evolve, can you identify at least two "phases" in the optimisation?
 >   * Once converged, do the score distribute in the manner that you would expect?
 >
-> **Hint:** the `plotPeriod` option can be changed to plot the diagnostic figure with a higher or lower frequency; this can singificantly affect the speed of the algorithm.
+> **Hint:** the `plotPeriod` option can be changed to plot the diagnostic figure with a higher or lower frequency; this can significantly affect the speed of the algorithm.
 
 ### Part 3.4: experimenting with the tiny CNN
 
@@ -511,13 +511,13 @@ In this part we will experiment with several variants of the network just learne
 > 
 >   * Is the learned filter very different from the one learned before?
 >   * If so, can you figure out what "went wrong"?
->   * Look carefully at the output of the first layer, magnifying with th loupe tool. Is the maximal filter response attained in the middle of each blob?
+>   * Look carefully at the output of the first layer, magnifying with the loupe tool. Is the maximal filter response attained in the middle of each blob?
 >
 > **Hint:** The Laplacian of Gaussian operator responds maximally at the centre of a blob only if the latter matches the blob size. Relate this fact to the combination of pre-smoothing the image and applying the learned $3\times 3$ filter.
 
 Now restore the smoothing but switch off subtracting the median from the input image.
 
-> **Task:** Train again the tiny CNN *without subtracting the median value in prerprocessing*. Answer the following questions:
+> **Task:** Train again the tiny CNN *without subtracting the median value in preprocessing*. Answer the following questions:
 >
 >   * Does the algorithm converge?
 >   * Reduce a hundred-fold the learning are and increase the maximum number of iterations by an equal amount. Does it get better?
@@ -525,25 +525,25 @@ Now restore the smoothing but switch off subtracting the median from the input i
 >
 > **Hint:** What constraint should the filter $\bw$ satisfy if the filter output should be zero when (i) the input image is zero or (ii) the input image is a large constant? Do you think that ti would be easy for gradient descent to enforce (ii) at all times?
 
-What you have just witnessed is actually a fairly general principle: centering the data usually makes learning problems much better conditioned.
+What you have just witnessed is actually a fairly general principle: centring the data usually makes learning problems much better conditioned.
 
 Now we will explore several parameters in the algorithms:
 
 > **Task:** Restore the preprocessing as given in `experiment4.m`.  Try the following:
 >
-> * Try increasing th learning rate `eta`. Can you achieve a better value of the energy in the 500 iterations?
+> * Try increasing the learning rate `eta`. Can you achieve a better value of the energy in the 500 iterations?
 > * Disable momentum by setting `momentum = 0`. Now try to beat the result obtained above by choosing `eta`. Can you succeed?
 
-Finally, consider the regularization effect of shrinking:
+Finally, consider the regularisation effect of shrinking:
 
-> **Task:** Restore the learning rate and momentum as given in `experiment4.m`. Then increase the shrkincage factor tenfold and a hundred-fold.
+> **Task:** Restore the learning rate and momentum as given in `experiment4.m`. Then increase the shrinkage factor tenfold and a hundred-fold.
 > 
 > - What is the effect on the convergence speed?
 > - What is the effect on the final value of the total objective function and of the average loss part of it?
 
 ## Part 4: learning a character CNN
 
-In this part we will learn a CNN to recognize images of characters.  
+In this part we will learn a CNN to recognise images of characters.  
 
 ### Part 4.1: prepare the data
 
@@ -625,9 +625,9 @@ im = imdb.images.data(:,:,batch) ;
 im = 256 * reshape(im, 32, 32, 1, []) ;
 labels = imdb.images.label(1,batch) ;
 ```
-The function extracts the $m$ images corresponding to the vector of indexes `batch`. It also reshape them as a $32\times 32\times 1\times m$ array (as this is the format expected by the MatConvNet functions) and multiplies the values by 256 (the resulting values match the network initialization and learning parameters). Finally, it also returns a vector of labels, one for each image in the batch.
+The function extracts the $m$ images corresponding to the vector of indexes `batch`. It also reshape them as a $32\times 32\times 1\times m$ array (as this is the format expected by the MatConvNet functions) and multiplies the values by 256 (the resulting values match the network initialisation and learning parameters). Finally, it also returns a vector of labels, one for each image in the batch.
 
-> **Task:** Run the learning code and exahmine the plots that are produced. As training completes answer the following questions:
+> **Task:** Run the learning code and examine the plots that are produced. As training completes answer the following questions:
 >
 > 1.  How many images per second can you process? (Look at the output in the MATLAB screen)
 > 2.  There are two sets of curves: energy and prediction error. What do you think is the difference? What is the "energy"?
@@ -644,7 +644,7 @@ save('data/chars-experiment/charscnn.mat', '-struct', 'net') ;
 Note that we remember the `imageMean` for later use. Note also that the softmaxloss layer is *removed* from the network before saving.
 
 
-### Part 4.4: visualize the learned filters
+### Part 4.4: visualise the learned filters
 
 The next step is to glance at the filters that have been learned:
 ```matlab
@@ -714,7 +714,7 @@ In this part we will see how MatConvNet can be used to download and run high-per
 
 Several [pertained models](http://www.vlfeat.org/matconvnet/pretrained/) can be downloaded from the MatConvNet website, including several trained using other CNN implementations such as Caffe. One such models is included in the practical `data/imagenet-vgg-verydeep-16.mat` file. This is one of the best models from the ImageNet ILSVCR Challenge 2014.
 
-### Part 5.1:  load a pretrained model
+### Part 5.1:  load a pre-trained model
 
 The first step is to load the model itself. This is in the format of the `vl_simplenn` CNN wrapper, and ships as a MATLAB `.mat` file:
 ```matlab

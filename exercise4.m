@@ -1,4 +1,4 @@
-function exercise4()
+function exercise4(varargin)
 % EXERCISE4   Part 4 of the VGG CNN practical
 
 setup ;
@@ -11,7 +11,7 @@ setup ;
 imdb = load('data/charsdb.mat') ;
 
 % Visualize some of the data
-figure(1) ; clf ; colormap gray ;
+figure(10) ; clf ; colormap gray ;
 subplot(1,2,1) ;
 vl_imarraysc(imdb.images.data(:,:,imdb.images.label==1 & imdb.images.set==1)) ;
 axis image off ;
@@ -38,6 +38,7 @@ trainOpts.continue = true ;
 trainOpts.useGpu = false ;
 trainOpts.learningRate = 0.001 ;
 trainOpts.expDir = 'data/chars-experiment' ;
+trainOpts = vl_argparse(trainOpts, varargin);
 
 % Take the average image out
 imdb = load('data/charsdb.mat') ;
@@ -96,7 +97,6 @@ decodeCharacters(net, imdb, im, res) ;
 trainOpts.batchSize = 100 ;
 trainOpts.numEpochs = 15 ;
 trainOpts.continue = true ;
-trainOpts.useGpu = false ;
 trainOpts.learningRate = 0.001 ;
 trainOpts.expDir = 'data/chars-jit-experiment' ;
 

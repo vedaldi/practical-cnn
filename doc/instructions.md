@@ -706,6 +706,25 @@ This is implemented by the `getBatchWithJitter()`  function (note that jittering
 > 3.  Use the new model to recognise the characters in the sentence by repeating the previous part. Does it work better?
 > 4.  **Advanced.** What else can you change to make the performance even better?
 
+## Part 4.7: Training using the GPU
+
+> Skip this part if you do not wish to experiment training using GPU hardware.
+
+A key challenge in deep learning is the sheer amount of computation required to train gigantic models from equally gigantic data collections. State-of-the-art vision models, for example, take weeks to train on specialised hardware such as GPUs, and they are essentially untrainable on CPU (unless you have access to a very large cluster). Thus it is practically important to learn how to use this hardware.
+
+In MatConvNet this is almost trivial as it builds on the easy-to-use GPU support in MATLAB. You can follow this list of steps to try it out:
+
+1. Clear the models generated and cached in the previous steps. To do this, rename or delete the directories `data/characters-experiment` and `data/chacaters-jit-experiment`.
+2. Make sure that MatConvNet is compiled with GPU support. To do this, use
+    ````
+    > setup('useGpu', true) ;
+    ````
+3. Try again training the model of `exercise4.m` switching to `true` the `useGpu` flag.
+
+> **Task:** Follow the steps above and note the speed of training. How many images per second can you process now?
+
+For these small images, the GPU speedup is probably modest (perhaps 2-5 folds). However, for larger models it becomes really dramatic (>10 folds).
+
 ## Part 5: using pertained models
 
 A characteristic of deep learning is that it constructs *representations* of the data. These representations tend to have a universal value, or at least to be applicable to an array of problems that trascends the particular task a model was trained for. This is fortunate as training complex models requires weeks of works on one or more GPUs or hundreds of CPUs; these models can then be frozen and reused for a number of additional applications, with no or minimal additional work.

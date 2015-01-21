@@ -67,7 +67,7 @@ figure(1) ; clf ; imagesc(x)
 ```
 This should display an image of bell peppers in Figure 1:
 
-![bell][2]
+<img height=400px src="images/peppers.png" alt="peppers"/>
 
 Use MATLAB `size` command to obtain the size of the array `x`. Note that the array `x` is converted to *single precision* format. This is because the underlying MatConvNet assumes that data is in single precision.
 

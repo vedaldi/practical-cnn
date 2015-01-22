@@ -18,7 +18,7 @@
 
 <p>This practical explores the basics of learning (deep) CNNs. The first part introduces typical CNN building blocks, such as ReLU units and linear filters, with a particular emphasis on understanding back-propagation. The second part looks at learning two basic CNNs. The first one is a simple non-linear filter capturing particular image structures, while the second one is a network that recognises typewritten characters (using a variety of different fonts). These examples illustrate the use of stochastic gradient descent with momentum, the definition of an objective function, the construction of mini-batches of data, and data jittering. The last part shows how powerful CNN models can be downloaded off-the-shelf and used directly in applications, bypassing the expensive training process.</p>
 
-<p><div class="toc">
+<p><div class="toc"><div class="toc">
 <ul>
 <li><a href="#vgg-convolutional-neural-networks-practical">VGG Convolutional Neural Networks Practical</a><ul>
 <li><a href="#getting-started">Getting started</a></li>
@@ -62,6 +62,7 @@
 </ul>
 </li>
 </ul>
+</div>
 </div>
 </p>
 
@@ -1068,10 +1069,8 @@ title(sprintf(<span class="hljs-string">'%s (%d), score %.3f'</span>,...
 <h2 id="acknowledgements">Acknowledgements</h2>
 
 <ul>
-<li>Beta testing by Karel Lenc.</li>
+<li>Beta testing by Karel Lenc and Carlos Arteta.</li>
 </ul>
-
-
 
 <h2 id="history">History</h2>
 
@@ -1079,5 +1078,5 @@ title(sprintf(<span class="hljs-string">'%s (%d), score %.3f'</span>,...
 <li>Used in the Oxford AIMS CDT, 2014-15.</li>
 </ul>
 
-<div class="footnotes"><hr><ol><li id="fn:lattice">A two-dimensional <em>lattice</em> is a discrete grid embedded in <span class="MathJax_Preview"></span><span class="MathJax" id="MathJax-Element-334-Frame" role="textbox" aria-readonly="true" style=""><nobr><span class="math" id="MathJax-Span-3609" style="width: 1.236em; display: inline-block;"><span style="display: inline-block; position: relative; width: 1.091em; height: 0px; font-size: 112%;"><span style="position: absolute; clip: rect(1.225em, 1000em, 2.381em, -0.459em); top: -2.232em; left: 0em;"><span class="mrow" id="MathJax-Span-3610"><span class="msubsup" id="MathJax-Span-3611"><span style="display: inline-block; position: relative; width: 1.067em; height: 0px;"><span style="position: absolute; clip: rect(1.678em, 1000em, 2.629em, -0.459em); top: -2.48em; left: 0em;"><span class="mi" id="MathJax-Span-3612" style="font-family: STIXGeneral-Italic;">R</span><span style="display: inline-block; width: 0px; height: 2.48em;"></span></span><span style="position: absolute; top: -2.662em; left: 0.645em;"><span class="mn" id="MathJax-Span-3613" style="font-size: 70.7%; font-family: STIXGeneral-Regular;">2</span><span style="display: inline-block; width: 0px; height: 2.282em;"></span></span></span></span></span><span style="display: inline-block; width: 0px; height: 2.232em;"></span></span></span><span style="border-left-width: 0em; border-left-style: solid; display: inline-block; overflow: hidden; width: 0px; height: 1.072em; vertical-align: -0.056em;"></span></span></nobr></span><script type="math/tex" id="MathJax-Element-334">R^2</script>, similar for example to a checkerboard. <a href="#fnref:lattice" title="Return to article" class="reversefootnote">↩</a></li></ol></div></div></body>
+<div class="footnotes"><hr><ol><li id="fn:lattice">A two-dimensional <em>lattice</em> is a discrete grid embedded in <span class="MathJax_Preview"></span><span class="MathJax" id="MathJax-Element-337-Frame" role="textbox" aria-readonly="true" style=""><nobr><span class="math" id="MathJax-Span-3624" style="width: 1.25em; display: inline-block;"><span style="display: inline-block; position: relative; width: 1.103em; height: 0px; font-size: 112%;"><span style="position: absolute; clip: rect(1.243em, 1000em, 2.416em, -0.486em); top: -2.258em; left: 0em;"><span class="mrow" id="MathJax-Span-3625"><span class="msubsup" id="MathJax-Span-3626"><span style="display: inline-block; position: relative; width: 1.073em; height: 0px;"><span style="position: absolute; clip: rect(1.71em, 1000em, 2.679em, -0.486em); top: -2.521em; left: 0em;"><span class="mi" id="MathJax-Span-3627" style="font-family: STIXGeneral-Italic;">R</span><span style="display: inline-block; width: 0px; height: 2.521em;"></span></span><span style="position: absolute; top: -2.691em; left: 0.63em;"><span class="mn" id="MathJax-Span-3628" style="font-size: 70.7%; font-family: STIXGeneral-Regular;">2</span><span style="display: inline-block; width: 0px; height: 2.311em;"></span></span></span></span></span><span style="display: inline-block; width: 0px; height: 2.258em;"></span></span></span><span style="border-left-width: 0em; border-left-style: solid; display: inline-block; overflow: hidden; width: 0px; height: 1.079em; vertical-align: -0.059em;"></span></span></nobr></span><script type="math/tex" id="MathJax-Element-337">R^2</script>, similar for example to a checkerboard. <a href="#fnref:lattice" title="Return to article" class="reversefootnote">↩</a></li></ol></div></div></body>
 </html>

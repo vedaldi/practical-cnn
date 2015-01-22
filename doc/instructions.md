@@ -782,7 +782,7 @@ That completes this practical.
 
 ## Acknowledgements
 
-* Beta testing by Karel Lenc.
+* Beta testing by Karel Lenc and Carlos Arteta.
 
 ## History
 

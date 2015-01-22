@@ -6,7 +6,7 @@ This is an [Oxford Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg) compu
 
 <img height=400px src="images/cover.png" alt="cover"/>
 
-*Convolutional neural networks* are an important class of learnable representations applicable, among others, to numerous computer vision problems. Deep CNNs, in particular, hare composed of several layers of processing, each involving linear as well as non-linear operators, that are learned jointly, in an end-to-end manner, to solve a particular tasks. Such methods become the predominant for feature extraction from audiovisual and textual data.
+*Convolutional neural networks* are an important class of learnable representations applicable, among others, to numerous computer vision problems. Deep CNNs, in particular, are composed of several layers of processing, each involving linear as well as non-linear operators, that are learned jointly, in an end-to-end manner, to solve a particular tasks. These methods are now the dominant approach for feature extraction from audiovisual and textual data.
 
 This practical explores the basics of learning (deep) CNNs. The first part introduces typical CNN building blocks, such as ReLU units and linear filters, with a particular emphasis on understanding back-propagation. The second part looks at learning two basic CNNs. The first one is a simple non-linear filter capturing particular image structures, while the second one is a network that recognises typewritten characters (using a variety of different fonts). These examples illustrate the use of stochastic gradient descent with momentum, the definition of an objective function, the construction of mini-batches of data, and data jittering. The last part shows how powerful CNN models can be downloaded off-the-shelf and used directly in applications, bypassing the expensive training process.
 
@@ -31,25 +31,25 @@ Read and understand the [requirements and installation instructions](../overview
 * Data only: [practical-cnn-2015a-data-only.tar.gz](http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2015a-data-only.tar.gz)
 * [Git repository](https://github.com/vedaldi/practical-cnn) (for lab setters and developers)
 
-After the installation is complete, open and edit the script `exercise1.m` in the MATLAB editor. The script contains commented code and a description for all steps of this exercise, relative to [Part I](#part1) of this document. You can cut and paste this code into the MATLAB window to run it, and will need to modify it as you go through the session. Other files `exercise2.m`, `exercise3.m`, and `exercise4.m` are given for [Part II](#part2), [III](#part3), and [IV](part4).
+After the installation is complete, open and edit the script `exercise1.m` in the MATLAB editor. The script contains commented code and a description for all steps of this exercise, for [Part I](#part1) of this document. You can cut and paste this code into the MATLAB window to run it, and will need to modify it as you go through the session. Other files `exercise2.m`, `exercise3.m`, and `exercise4.m` are given for [Part II](#part2), [III](#part3), and [IV](part4).
 
 Each part contains several **Questions** (that require pen and paper) and **Tasks** (that require experimentation or coding) to be answered/completed before proceeding further in the practical.
 
 ## Part 1: CNN building blocks {#part1}
 
-### Part 1.1: linear convolution {#part1.1}
+### Part 1.1: convolution {#part1.1}
 
 A feed-forward neural network can be thought of as the composition of number of functions 
 $$
 f(\bx) = f_L(\dots f_2(f_1(\bx;\bw_1);\bw_2)\dots),\bw_{L}).
 $$
-Each function $f_l$ takes as input a datum $\bx_l$ and a parameter vector $\bw_l$ and produces as output a datum $\bx_{l+1}$. While the type and sequence of functions is usually handcrafted, the paramters $\bw=(\bw_1,\dots,\bw_L)$ are *learned from data* in order to solve a target problem, for example classifying images or sounds.
+Each function $f_l$ takes as input a datum $\bx_l$ and a parameter vector $\bw_l$ and produces as output a datum $\bx_{l+1}$. While the type and sequence of functions is usually handcrafted, the parameters $\bw=(\bw_1,\dots,\bw_L)$ are *learned from data* in order to solve a target problem, for example classifying images or sounds.
 
-In a *convolutional neural network* data and functions have additional structure. The data $\bx_1,\dots,\bx_n$ are images, sounds, or more in general maps from a lattice[^lattice] to one or more real numbers. In particular, since the rest of the practical will focus on computer vision applications, data will be 2D dimensional arrays of pixels. Formally, each $\bx_i$ will be a $M \times N \times K$ real array of $M \times N$ pixels and $K$ channels per pixels. Hence the first two dimension of the array span space, while the last one channels. Note that only the input $\bx=\bx_1$ of the network is an actual image, while the remaining data are intermediate *feature maps*.
+In a *convolutional neural network* data and functions have additional structure. The data $\bx_1,\dots,\bx_n$ are images, sounds, or more in general maps from a lattice[^lattice] to one or more real numbers. In particular, since the rest of the practical will focus on computer vision applications, data will be 2D arrays of pixels. Formally, each $\bx_i$ will be a $M \times N \times K$ real array of $M \times N$ pixels and $K$ channels per pixel. Hence the first two dimensions of the array span space, while the last one spans channels. Note that only the input $\bx=\bx_1$ of the network is an actual image, while the remaining data are intermediate *feature maps*.
 
-The second property of a CNN is that the functions $f_l$ have a *convolutional structure*. This means that $f_l$ applies to the input map $\bx_l$ an operator that is *local and translation invariant*. Examples of convolutional operators are applying a bank of linear filters to $\bx_l$ or computing its element-wise square. 
+The second property of a CNN is that the functions $f_l$ have a *convolutional structure*. This means that $f_l$ applies to the input map $\bx_l$ an operator that is *local and translation invariant*. Examples of convolutional operators are applying a bank of linear filters to $\bx_l$. 
 
-In this part we will familiarise ourselves with a number of such convolutional operators. The first one is the regular *linear convolution* by a filter bank. We will start by focusing our attention on a single function relation as follows:
+In this part we will familiarise ourselves with a number of such convolutional and non-linear operators. The first one is the regular *linear convolution* by a filter bank. We will start by focusing our attention on a single function relation as follows:
 $$
  f: \mathbb{R}^{M\times N\times K} \rightarrow \mathbb{R}^{M' \times N' \times K'},
  \qquad \bx \mapsto \by.
@@ -80,7 +80,7 @@ w = randn(5,5,3,10,'single') ;
 ```
 The filters are in single precision as well. Note that `w` has four dimensions, packing 10 filters. Note also that each filter is not flat, but rather a volume with three layers. The next step is applying the filter to the image. This uses the `vl_nnconv` function from MatConvNet:
 ```matlab
-% Apply the convolutional operator
+% Apply the convolution operator
 y = vl_nnconv(x, w, []) ;
 ```
 **Remark:** You might have noticed that the third argument to the `vl_nnconv` function is the empty matrix `[]`. It can be otherwise used to pass a vector of bias terms to add to the output of each filter.
@@ -104,9 +104,9 @@ We can now visualise the output `y` of the convolution. In order to do this, use
 figure(2) ; clf ; vl_imarraysc(y) ; colormap gray ;
 ```
 
-> **Question:** Study the feature channels obtained. Most will likely contain a strong response in correspondences of edges in the input image `x`. Recall that `w` was obtained by drawing at random numbers from a Gaussian distribution. Can explain this phenomenon?
+> **Question:** Study the feature channels obtained. Most will likely contain a strong response in correspondences of edges in the input image `x`. Recall that `w` was obtained by drawing random numbers from a Gaussian distribution. Can you explain this phenomenon?
 
-So far filters preserve the resolution of the input feature map. However, it is often useful to *dowsnample the output*. This can be obtained by using the `stride` option in `vl_nnconv`:
+So far filters preserve the resolution of the input feature map. However, it is often useful to *downsample the output*. This can be obtained by using the `stride` option in `vl_nnconv`:
 ```matlab
 % Try again, downsampling the output
 y_ds = vl_nnconv(x, w, [], 'stride', 16) ;
@@ -119,9 +119,9 @@ y_pad = vl_nnconv(x, w, [], 'pad', 4) ;
 figure(4) ; clf ; vl_imarraysc(y_pad) ; colormap gray ;
 ```
 
-> **Task:** Convince yourself that the previous code's output has different boundaries compared to the code that does not use padding. Can you justify the result?
+> **Task:** Convince yourself that the previous code's output has different boundaries compared to the code that does not use padding. Can you explain the result?
 
-In order to consolidate what learned so far, we will now design a filter by hand:
+In order to consolidate what has been learned so far, we will now design a filter by hand:
 ```matlab
 w = [0  1 0 ;
      1 -4 1 ;
@@ -143,11 +143,11 @@ imagesc(-abs(y_lap)) ; title('- abs(filter output)') ;
 
 ### Part 1.2: non-linear gating {#part1.2}
 
-As we have stated in the introduction, CNNs are obtained by composing several different functions. In addition to the linear filters shown in the [previous part](#part1.1), there are several non-linear convolutional operators as well.
+As we stated in the introduction, CNNs are obtained by composing several different functions. In addition to the linear filters shown in the [previous part](#part1.1), there are several non-linear operators as well.
 
 > **Question:** Some of the functions in a CNN *must* be non-linear. Why?
 
-The simplest non-linearity is obtained by following a linear filter by a *non-linear gating function*, applied identically to each component of a feature map. The simplest such function is the *Rectified Linear Unit (ReLU)*
+The simplest non-linearity is obtained by following a linear filter by a *non-linear gating function*, applied identically to each component (i.e. point-wise) of a feature map. The simplest such function is the *Rectified Linear Unit (ReLU)*
 $$
   y_{ijk} = \max\{0, x_{ijk}\}.
 $$
@@ -213,7 +213,7 @@ figure(6) ; clf ; imagesc(y_nrm) ;
 
 The parameters of a CNN $\bw=(\bw_1,\dots\bw_L)$ should be learned in such a manner that the overall CNN function  $\bz = f(\bx;\bw)$ achieves a desired goal. In some cases,  the goal is to model the distribution of the data, which leads to a *generative objective*. Here, however, we will use $f$ as a *regressor* and obtain it by minimising a *discriminative objective*. In simple terms, we are given:
 
-* examples of the desired input-output relations $(\bx_1,\bz_1), \dots, (\bx_n,\bz_n)$ where $\bx_i$ are input data and $\bz_i$ corresponding output labels;
+* examples of the desired input-output relations $(\bx_1,\bz_1), \dots, (\bx_n,\bz_n)$ where $\bx_i$ are input data and $\bz_i$ corresponding output values;
 * and a loss $\ell(\bz,\hat\bz)$ that expresses the penalty for predicting $\hat\bz$ instead of $\bz$.
 
 We use those to write the empirical loss of the CNN $f$ by averaging over the examples:
@@ -228,7 +228,7 @@ $$
 $$
 where $\eta_t \in \mathbb{R}_+$ is the *learning rate*.
 
-### Part 2.1: theory of back-propagation
+### Part 2.1: the theory of back-propagation
 
 The basic computational problem to solve is the calculation of the gradient of the function with respect to the parameter $\bw$. Since $f$ is the composition of several functions, the key ingredient is the *chain rule*:
 $$
@@ -250,12 +250,12 @@ The notation requires some explanation. Recall that each function $f_l$ is a map
 > **Questions:** Make sure you understand the structure of this formula and answer the following:
 > 
 > * $\partial \vc f_l / \partial \vc \bx_l^\top$ is a matrix. What are its dimensions?
-> * The formula can be rewritten with a slightly different notation by replacing the symbols $f_l$ with the symbols $\bx_{l+1}$. If you do so, do you notice any formal cancelation?
+> * The formula can be rewritten with a slightly different notation by replacing the symbols $f_l$ with the symbols $\bx_{l+1}$. If you do so, do you notice any formal cancellation?
 > * The formula only includes the derivative symbols. However, these derivatives must be computed at a well defined point. What is this point?
 
-To apply the chain rule we must be able to compute, for each function $l$, its derivative with respect to the parameters $\bw_l$ as well as its input $\bx_l$. While this could be done naively, a problem is the very high dimensionality of the matrices involved in this calculation as these are $M'N'K' \times MNK$ arrays. We will now introduce a ``trick'' that allows reducing this to working with $MNK$ numbers only and which will yield to the *back-propagation algorithm*. 
+To apply the chain rule we must be able to compute, for each function $f_l$, its derivative with respect to the parameters $\bw_l$ as well as its input $\bx_l$. While this could be done naively, a problem is the very high dimensionality of the matrices involved in this calculation as these are $M'N'K' \times MNK$ arrays. We will now introduce a ``trick'' that allows this to be reduced to working with $MNK$ numbers only and which will yield the *back-propagation algorithm*. 
 
-The key observation is that we ear not after $\partial \vc f_l / \partial \bw_l^\top$ but after $\partial f/ \partial\bw_l^\top$:
+The key observation is that we are not after $\partial \vc f_l / \partial \bw_l^\top$ but after $\partial f/ \partial\bw_l^\top$:
 $$
  \frac{\partial f}{\partial\bw_l^\top}
  =
@@ -290,7 +290,7 @@ Then the key of the iteration is obtaining the derivatives for layer $l$ given t
 
 > **Question:** Suppose that $f_l$ is the function $\bx_{l+1} = A \bx_{l}$ where $\bx_{l}$ and $\bx_{l+1}$ are column vectors. Suppose that $B = \partial g_{l+1}/\partial \bx_{l+1} $ is given. Derive an expression for $C = \partial g_{l}/\partial \bx_{l}$ and an expression for $D =  \partial g_{l}/\partial \bw_{l}$.
 
-### Part 2.1: putting back-propagation to the practice
+### Part 2.1: using back-propagation in practice
 
 A key feature of MatConvNet and similar neural network packages is the ability to support back-propagation. In order to do so, lets focus on a single computational block $f$, followed by a function $g$:
 $$
@@ -304,7 +304,7 @@ $$
  \longrightarrow
  z
 $$
-where *$z$ is assumed to be a scalar*. Then each computation block (for example `vl_nnconv` or `vl_nnpool`) can compute $\partial z / \partial \bx$ and $\partial z / \partial \bw$ given as input $\bx$ and $\partial z / \partial \by$. Let's put this to the practice:
+where *$z$ is assumed to be a scalar*. Then each computation block (for example `vl_nnconv` or `vl_nnpool`) can compute $\partial z / \partial \bx$ and $\partial z / \partial \bw$ given as input $\bx$ and $\partial z / \partial \by$. Let's put this into practice:
 ```matlab
 % Read an example image
 x = im2single(imread('peppers.png')) ;
@@ -340,8 +340,8 @@ fprintf(...
 
 > **Questions:**
 > 
-> * What is the meaning f `ex` in the code above? 
-> * What are the derivatives `dzdx_empirical` and `dzdx_comptued`?
+> * What is the meaning of `ex` in the code above? 
+> * What are the derivatives `dzdx_empirical` and `dzdx_computed`?
 >
 > **Tasks:**
 > 
@@ -507,7 +507,7 @@ plotPeriod = 10 ;
 
 In this part we will experiment with several variants of the network just learned. First, we study the effect of the image smoothing:
 
-> **Task:** Train again the tiny CNN *without smoothing the input image in prerprocessing*. Anwser the following questions:
+> **Task:** Train again the tiny CNN *without smoothing the input image in preprocessing*. Answer the following questions:
 > 
 >   * Is the learned filter very different from the one learned before?
 >   * If so, can you figure out what "went wrong"?
@@ -523,7 +523,7 @@ Now restore the smoothing but switch off subtracting the median from the input i
 >   * Reduce a hundred-fold the learning are and increase the maximum number of iterations by an equal amount. Does it get better?
 >   * Explain why adding a constant to the input image can have such a dramatic effect on the performance of the optimisation.
 >
-> **Hint:** What constraint should the filter $\bw$ satisfy if the filter output should be zero when (i) the input image is zero or (ii) the input image is a large constant? Do you think that ti would be easy for gradient descent to enforce (ii) at all times?
+> **Hint:** What constraint should the filter $\bw$ satisfy if the filter output should be zero when (i) the input image is zero or (ii) the input image is a large constant? Do you think that it would be easy for gradient descent to enforce (ii) at all times?
 
 What you have just witnessed is actually a fairly general principle: centring the data usually makes learning problems much better conditioned.
 
@@ -556,7 +556,7 @@ ans =
     label: [1x24206 double]
       set: [1x24206 double]
 ```
-These are stored as the array `imdb.images.id` is a 24,206-dimensional vector of numeric IDs for each of the 24,206 character images in the dataset. `imdb.images.data` contains a $32 \times 32$ image for each character, stored as a slide of a $32\times 32\times 24,\!206$-dimesnional array. `imdb.images.label` is a vector of image labels, denoting which one of the 26 possible characters it is. `imdb.images.set` is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.
+These are stored as the array `imdb.images.id` is a 24,206-dimensional vector of numeric IDs for each of the 24,206 character images in the dataset. `imdb.images.data` contains a $32 \times 32$ image for each character, stored as a slide of a $32\times 32\times 24,\!206$-dimensional array. `imdb.images.label` is a vector of image labels, denoting which one of the 26 possible characters it is. `imdb.images.set` is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.
 
 <img height=400px src="images/chars.png" alt="cover"/>
 
@@ -587,7 +587,7 @@ where $c_{ij}$ is the index of the ground-truth class at spatial location $(i,j)
 
 > **Tasks:**
 >
-> 1.  Understand what the softmax operator does. **Hint:** to use the log-loss the data must me in the (0, 1] interval.
+> 1.  Understand what the softmax operator does. **Hint:** to use the log-loss the data must be in the (0, 1] interval.
 > 2.  Understand what is the effect of minimising the log-loss. Which neural response should become larger?
 > 3.  Why do you think MatConvNet provides a third function `vl_nnsoftmaxloss` combining both functions into a single layer?
 
@@ -706,7 +706,7 @@ This is implemented by the `getBatchWithJitter()`  function (note that jittering
 > 3.  Use the new model to recognise the characters in the sentence by repeating the previous part. Does it work better?
 > 4.  **Advanced.** What else can you change to make the performance even better?
 
-## Part 4.7: Training using the GPU
+### Part 4.7: Training using the GPU
 
 > Skip this part if you do not wish to experiment training using GPU hardware.
 
@@ -714,7 +714,7 @@ A key challenge in deep learning is the sheer amount of computation required to 
 
 In MatConvNet this is almost trivial as it builds on the easy-to-use GPU support in MATLAB. You can follow this list of steps to try it out:
 
-1. Clear the models generated and cached in the previous steps. To do this, rename or delete the directories `data/characters-experiment` and `data/chacaters-jit-experiment`.
+1. Clear the models generated and cached in the previous steps. To do this, rename or delete the directories `data/characters-experiment` and `data/characters-jit-experiment`.
 2. Make sure that MatConvNet is compiled with GPU support. To do this, use
     ````
     > setup('useGpu', true) ;
@@ -723,11 +723,11 @@ In MatConvNet this is almost trivial as it builds on the easy-to-use GPU support
 
 > **Task:** Follow the steps above and note the speed of training. How many images per second can you process now?
 
-For these small images, the GPU speedup is probably modest (perhaps 2-5 folds). However, for larger models it becomes really dramatic (>10 folds).
+For these small images, the GPU speedup is probably modest (perhaps 2-5 fold). However, for larger models it becomes really dramatic (>10 fold).
 
-## Part 5: using pertained models
+## Part 5: using pretrained models
 
-A characteristic of deep learning is that it constructs *representations* of the data. These representations tend to have a universal value, or at least to be applicable to an array of problems that trascends the particular task a model was trained for. This is fortunate as training complex models requires weeks of works on one or more GPUs or hundreds of CPUs; these models can then be frozen and reused for a number of additional applications, with no or minimal additional work.
+A characteristic of deep learning is that it constructs *representations* of the data. These representations tend to have a universal value, or at least to be applicable to an array of problems that transcends the particular task a model was trained for. This is fortunate as training complex models requires weeks of works on one or more GPUs or hundreds of CPUs; these models can then be frozen and reused for a number of additional applications, with no or minimal additional work.
 
 In this part we will see how MatConvNet can be used to download and run high-performance CNN models for image classification. These models are trained from 1.2M images in the ImageNet datasets to discriminate 1,000 different object categories.
 

@@ -11,7 +11,8 @@ fi
 
 if test ! -e matconvnet
 then
-    wget http://www.vlfeat.org/matconvnet/download/matconvnet-1.0-beta8.tar.gz \--output-document=data/matconvnet.tar.gz --continue
+    wget http://www.vlfeat.org/matconvnet/download/matconvnet-1.0-beta9.tar.gz \
+         --output-document=data/matconvnet.tar.gz --continue
     tar xzvf data/matconvnet.tar.gz
-    mv matconvnet-1.0-beta8 matconvnet
+    mv matconvnet-1.0-beta9 matconvnet
 fi

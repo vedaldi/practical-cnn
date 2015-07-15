@@ -87,7 +87,7 @@ y = vl_nnconv(x, w, []) ;
 
 The variable `y` contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map $\bx$ with $K$ channels. Furthermore, there are $K'$ such filters, generating a $K'$ dimensional map $\by$ as follows
 $$
-y_{i'j'k'} = \sum_{ijk} w_{ijk} x_{i+i',j+j',k,k'}
+y_{i'j'k'} = \sum_{ijk} w_{ijkk'} x_{i+i',j+j',k}
 $$
 
 > **Questions:** Study carefully this expression and answer the following:
@@ -782,7 +782,8 @@ That completes this practical.
 
 ## Acknowledgements
 
-* Beta testing by Karel Lenc and Carlos Arteta.
+* Beta testing by: Karel Lenc and Carlos Arteta.
+* Bugfixes/typos by: Sun Yushi.
 
 ## History
 

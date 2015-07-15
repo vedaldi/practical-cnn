@@ -158,7 +158,7 @@ y = vl_nnconv(x, w, <span class="hljs-matrix">[]</span>) ;</code></pre>
 
 <p>The variable <code>y</code> contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map <script type="math/tex" id="MathJax-Element-20">\bx</script> with <script type="math/tex" id="MathJax-Element-21">K</script> channels. Furthermore, there are <script type="math/tex" id="MathJax-Element-22">K'</script> such filters, generating a <script type="math/tex" id="MathJax-Element-23">K'</script> dimensional map <script type="math/tex" id="MathJax-Element-24">\by</script> as follows <br>
 <script type="math/tex; mode=display" id="MathJax-Element-25">
-y_{i'j'k'} = \sum_{ijk} w_{ijk} x_{i+i',j+j',k,k'}
+y_{i'j'k'} = \sum_{ijk} w_{ijkk'} x_{i+i',j+j',k}
 </script></p>
 
 <blockquote>
@@ -1068,7 +1068,8 @@ title(sprintf(<span class="hljs-string">'%s (%d), score %.3f'</span>,...
 <h2 id="acknowledgements">Acknowledgements</h2>
 
 <ul>
-<li>Beta testing by Karel Lenc and Carlos Arteta.</li>
+<li>Beta testing by: Karel Lenc and Carlos Arteta.</li>
+<li>Bugfixes/typos by: Sun Yushi.</li>
 </ul>
 
 

@@ -35,7 +35,7 @@ net = initializeCharacterCNN() ;
 trainOpts.batchSize = 100 ;
 trainOpts.numEpochs = 15 ;
 trainOpts.continue = true ;
-trainOpts.useGpu = false ;
+trainOpts.gpus = [] ;
 trainOpts.learningRate = 0.001 ;
 trainOpts.expDir = 'data/chars-experiment' ;
 trainOpts = vl_argparse(trainOpts, varargin);
@@ -46,7 +46,7 @@ imageMean = mean(imdb.images.data(:)) ;
 imdb.images.data = imdb.images.data - imageMean ;
 
 % Convert to a GPU array if needed
-if trainOpts.useGpu
+if numel(trainOpts.gpus) > 0
   imdb.images.data = gpuArray(imdb.images.data) ;
 end
 
@@ -54,7 +54,7 @@ end
 [net,info] = cnn_train(net, imdb, @getBatch, trainOpts) ;
 
 % Move the CNN back to the CPU if it was trained on the GPU
-if trainOpts.useGpu
+if numel(trainOpts.gpus) > 0
   net = vl_simplenn_move(net, 'cpu') ;
 end
 
@@ -107,7 +107,7 @@ net = initializeCharacterCNN() ;
 [net,info] = cnn_train(net, imdb, @getBatchWithJitter, trainOpts) ;
 
 % Move the CNN back to CPU if it was trained on GPU
-if trainOpts.useGpu
+if numel(trainOpts.gpus) > 0
   net = vl_simplenn_move(net, 'cpu') ;
 end
 

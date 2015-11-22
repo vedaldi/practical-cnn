@@ -68,7 +68,7 @@ save('data/chars-experiment/charscnn.mat', '-struct', 'net') ;
 % -------------------------------------------------------------------------
 
 figure(2) ; clf ; colormap gray ;
-vl_imarraysc(squeeze(net.layers{1}.filters),'spacing',2)
+vl_imarraysc(squeeze(net.layers{1}.weights{1}),'spacing',2)
 axis equal ; title('filters in the first layer') ;
 
 % -------------------------------------------------------------------------

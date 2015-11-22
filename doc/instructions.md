@@ -649,7 +649,7 @@ Note that we remember the `imageMean` for later use. Note also that the softmaxl
 The next step is to glance at the filters that have been learned:
 ```matlab
 figure(2) ; clf ; colormap gray ;
-vl_imarraysc(squeeze(net.layers{1}.filters),'spacing',2)
+vl_imarraysc(squeeze(net.layers{1}.weights{1}),'spacing',2)
 axis equal ;
 title('filters in the first layer') ;
 ```
@@ -787,6 +787,7 @@ That completes this practical.
 
 ## History
 
+* Used in the Oxford AIMS CDT, 2015-16.
 * Used in the Oxford AIMS CDT, 2014-15.
 
 [^lattice]: A two-dimensional *lattice* is a discrete grid embedded in $R^2$, similar for example to a checkerboard.

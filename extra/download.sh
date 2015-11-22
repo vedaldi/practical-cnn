@@ -1,5 +1,5 @@
 #!/bin/bash
-wget http://www.vlfeat.org/matconvnet/models/imagenet-vgg-verydeep-16.mat \
+wget http://www.vlfeat.org/sandbox-matconvnet/models/imagenet-vgg-verydeep-16.mat \
     --output-document=data/imagenet-vgg-verydeep-16.mat --continue
 
 if test ! -e vlfeat
@@ -11,8 +11,8 @@ fi
 
 if test ! -e matconvnet
 then
-    wget http://www.vlfeat.org/matconvnet/download/matconvnet-1.0-beta16.tar.gz \
+    wget http://www.vlfeat.org/sandbox-matconvnet/download/matconvnet-1.0-beta17.tar.gz \
          --output-document=data/matconvnet.tar.gz --continue
     tar xzvf data/matconvnet.tar.gz
-    mv matconvnet-1.0-beta16 matconvnet
+    mv matconvnet-1.0-beta17 matconvnet
 fi

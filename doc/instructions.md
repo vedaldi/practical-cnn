@@ -434,7 +434,7 @@ colormap gray ;
 
 ### Part 3.2: image preprocessing
 
-Before we attempt to train the CNN, the image is pre-processed to remove its mean value. It is also smoothed by applying a Gaussian kernel of standard deviation 3 pixels:
+Before we attempt to train the CNN, the image is pre-processed to remove its median value. It is also smoothed by applying a Gaussian kernel of standard deviation 3 pixels:
 ```matlab
 % Pre-smooth the image
 im = vl_imsmooth(im,3) ;

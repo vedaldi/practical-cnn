@@ -1,0 +1,46 @@
+html {
+    font-family: sans-serif;
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%
+}
+
+body {
+    margin: auto ;
+    padding: 4em ;
+    max-width: 60em ;
+    line-height: 1.35em ;
+}
+
+a {
+    background: transparent
+}
+
+a:focus {
+    outline: thin dotted
+}
+
+a:active, a:hover {
+    outline: 0
+}
+
+h1 {
+    font-size: 2em;
+    margin: .67em 0
+}
+
+code, pre {
+    font-family: monospace, serif;
+    font-size: 1em ;
+    color: blue ;
+}
+
+pre {
+    white-space: pre-wrap
+}
+
+blockquote {
+    background-color: #eee ;
+    padding: 0.5em ;
+    margin-left: 0px ;
+    border-left: 10px solid #ddd ;
+}

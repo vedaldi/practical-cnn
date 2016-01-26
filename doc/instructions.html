@@ -1,32 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>CNN practical</title>
-<link rel="stylesheet" href="https://stackedit.io/res-min/themes/base.css" />
-<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Image classification practical (CNN version)</title>
+  <link rel="stylesheet" href="base.css" />
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+  </script>
+  <script type="text/javascript"
+          src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+  <!-- Code highlights -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
 </head>
-<body><div class="container"><h1 id="vgg-convolutional-neural-networks-practical">VGG Convolutional Neural Networks Practical</h1>
-
+<body>
+<h1 id="vgg-convolutional-neural-networks-practical">VGG Convolutional Neural Networks Practical</h1>
 <p><em>By Andrea Vedaldi and Andrew Zisserman</em></p>
-
 <p>This is an <a href="http://www.robots.ox.ac.uk/~vgg">Oxford Visual Geometry Group</a> computer vision practical, authored by <a href="http://www.robots.ox.ac.uk/~vedaldi/">Andrea Vedaldi</a> and Andrew Zisserman (Release 2015a).</p>
-
-<p><img height="400px" src="images/cover.png" alt="cover"></p>
-
+<p><img height=400px src="images/cover.png" alt="cover"/></p>
 <p><em>Convolutional neural networks</em> are an important class of learnable representations applicable, among others, to numerous computer vision problems. Deep CNNs, in particular, are composed of several layers of processing, each involving linear as well as non-linear operators, that are learned jointly, in an end-to-end manner, to solve a particular tasks. These methods are now the dominant approach for feature extraction from audiovisual and textual data.</p>
-
 <p>This practical explores the basics of learning (deep) CNNs. The first part introduces typical CNN building blocks, such as ReLU units and linear filters, with a particular emphasis on understanding back-propagation. The second part looks at learning two basic CNNs. The first one is a simple non-linear filter capturing particular image structures, while the second one is a network that recognises typewritten characters (using a variety of different fonts). These examples illustrate the use of stochastic gradient descent with momentum, the definition of an objective function, the construction of mini-batches of data, and data jittering. The last part shows how powerful CNN models can be downloaded off-the-shelf and used directly in applications, bypassing the expensive training process.</p>
-
-<p><div class="toc">
+<div class="toc">
 <ul>
 <li><a href="#vgg-convolutional-neural-networks-practical">VGG Convolutional Neural Networks Practical</a><ul>
 <li><a href="#getting-started">Getting started</a></li>
 <li><a href="#part1">Part 1: CNN building blocks</a><ul>
-<li><a href="#part1-1">Part 1.1: convolution</a></li>
-<li><a href="#part1-2">Part 1.2: non-linear gating</a></li>
-<li><a href="#part1-3">Part 1.3: pooling</a></li>
-<li><a href="#part1-4">Part 1.4: normalisation</a></li>
+<li><a href="#part1.1">Part 1.1: convolution</a></li>
+<li><a href="#part1.2">Part 1.2: non-linear gating</a></li>
+<li><a href="#part1.3">Part 1.3: pooling</a></li>
+<li><a href="#part1.4">Part 1.4: normalisation</a></li>
 </ul>
 </li>
 <li><a href="#part-2-back-propagation-and-derivatives">Part 2: back-propagation and derivatives</a><ul>
@@ -63,11 +76,7 @@
 </li>
 </ul>
 </div>
-</p>
-
-
-
-<p><script type="math/tex; mode=display" id="MathJax-Element-1">
+<p>$$
    \newcommand{\bx}{\mathbf{x}}
    \newcommand{\by}{\mathbf{y}}
    \newcommand{\bz}{\mathbf{z}}
@@ -75,355 +84,263 @@
    \newcommand{\cP}{\mathcal{P}}
    \newcommand{\cN}{\mathcal{N}}
    \newcommand{\vc}{\operatorname{vec}}
-</script></p>
-
-
-
+$$</p>
 <h2 id="getting-started">Getting started</h2>
-
 <p>Read and understand the <a href="../overview/index.html#installation">requirements and installation instructions</a>. The download links for this practical are:</p>
-
 <ul>
 <li>Code and data: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2015a.tar.gz">practical-cnn-2015a.tar.gz</a></li>
 <li>Code only: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2015a-code-only.tar.gz">practical-cnn-2015a-code-only.tar.gz</a></li>
 <li>Data only: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2015a-data-only.tar.gz">practical-cnn-2015a-data-only.tar.gz</a></li>
 <li><a href="https://github.com/vedaldi/practical-cnn">Git repository</a> (for lab setters and developers)</li>
 </ul>
-
 <p>After the installation is complete, open and edit the script <code>exercise1.m</code> in the MATLAB editor. The script contains commented code and a description for all steps of this exercise, for <a href="#part1">Part I</a> of this document. You can cut and paste this code into the MATLAB window to run it, and will need to modify it as you go through the session. Other files <code>exercise2.m</code>, <code>exercise3.m</code>, and <code>exercise4.m</code> are given for <a href="#part2">Part II</a>, <a href="#part3">III</a>, and <a href="part4">IV</a>.</p>
-
 <p>Each part contains several <strong>Questions</strong> (that require pen and paper) and <strong>Tasks</strong> (that require experimentation or coding) to be answered/completed before proceeding further in the practical.</p>
-
-
-
 <h2 id="part1">Part 1: CNN building blocks</h2>
-
-
-
-<h3 id="part1-1" class="1">Part 1.1: convolution</h3>
-
-<p>A feed-forward neural network can be thought of as the composition of number of functions  <br>
-<script type="math/tex; mode=display" id="MathJax-Element-2">
+<h3 id="part1.1">Part 1.1: convolution</h3>
+<p>A feed-forward neural network can be thought of as the composition of number of functions 
+$$
 f(\bx) = f_L(\dots f_2(f_1(\bx;\bw_1);\bw_2)\dots),\bw_{L}).
-</script> <br>
-Each function <script type="math/tex" id="MathJax-Element-3">f_l</script> takes as input a datum <script type="math/tex" id="MathJax-Element-4">\bx_l</script> and a parameter vector <script type="math/tex" id="MathJax-Element-5">\bw_l</script> and produces as output a datum <script type="math/tex" id="MathJax-Element-6">\bx_{l+1}</script>. While the type and sequence of functions is usually handcrafted, the parameters <script type="math/tex" id="MathJax-Element-7">\bw=(\bw_1,\dots,\bw_L)</script> are <em>learned from data</em> in order to solve a target problem, for example classifying images or sounds.</p>
-
-<p>In a <em>convolutional neural network</em> data and functions have additional structure. The data <script type="math/tex" id="MathJax-Element-8">\bx_1,\dots,\bx_n</script> are images, sounds, or more in general maps from a lattice<a href="#fn:lattice" id="fnref:lattice" title="See footnote" class="footnote">1</a> to one or more real numbers. In particular, since the rest of the practical will focus on computer vision applications, data will be 2D arrays of pixels. Formally, each <script type="math/tex" id="MathJax-Element-9">\bx_i</script> will be a <script type="math/tex" id="MathJax-Element-10">M \times N \times K</script> real array of <script type="math/tex" id="MathJax-Element-11">M \times N</script> pixels and <script type="math/tex" id="MathJax-Element-12">K</script> channels per pixel. Hence the first two dimensions of the array span space, while the last one spans channels. Note that only the input <script type="math/tex" id="MathJax-Element-13">\bx=\bx_1</script> of the network is an actual image, while the remaining data are intermediate <em>feature maps</em>.</p>
-
-<p>The second property of a CNN is that the functions <script type="math/tex" id="MathJax-Element-14">f_l</script> have a <em>convolutional structure</em>. This means that <script type="math/tex" id="MathJax-Element-15">f_l</script> applies to the input map <script type="math/tex" id="MathJax-Element-16">\bx_l</script> an operator that is <em>local and translation invariant</em>. Examples of convolutional operators are applying a bank of linear filters to <script type="math/tex" id="MathJax-Element-17">\bx_l</script>. </p>
-
-<p>In this part we will familiarise ourselves with a number of such convolutional and non-linear operators. The first one is the regular <em>linear convolution</em> by a filter bank. We will start by focusing our attention on a single function relation as follows: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-18">
+$$
+Each function $f_l$ takes as input a datum $\bx_l$ and a parameter vector $\bw_l$ and produces as output a datum $\bx_{l+1}$. While the type and sequence of functions is usually handcrafted, the parameters $\bw=(\bw_1,\dots,\bw_L)$ are <em>learned from data</em> in order to solve a target problem, for example classifying images or sounds.</p>
+<p>In a <em>convolutional neural network</em> data and functions have additional structure. The data $\bx_1,\dots,\bx_n$ are images, sounds, or more in general maps from a lattice<sup id="fnref:lattice"><a class="footnote-ref" href="#fn:lattice" rel="footnote">1</a></sup> to one or more real numbers. In particular, since the rest of the practical will focus on computer vision applications, data will be 2D arrays of pixels. Formally, each $\bx_i$ will be a $M \times N \times K$ real array of $M \times N$ pixels and $K$ channels per pixel. Hence the first two dimensions of the array span space, while the last one spans channels. Note that only the input $\bx=\bx_1$ of the network is an actual image, while the remaining data are intermediate <em>feature maps</em>.</p>
+<p>The second property of a CNN is that the functions $f_l$ have a <em>convolutional structure</em>. This means that $f_l$ applies to the input map $\bx_l$ an operator that is <em>local and translation invariant</em>. Examples of convolutional operators are applying a bank of linear filters to $\bx_l$. </p>
+<p>In this part we will familiarise ourselves with a number of such convolutional and non-linear operators. The first one is the regular <em>linear convolution</em> by a filter bank. We will start by focusing our attention on a single function relation as follows:
+$$
  f: \mathbb{R}^{M\times N\times K} \rightarrow \mathbb{R}^{M' \times N' \times K'},
  \qquad \bx \mapsto \by.
-</script> <br>
+$$
 Open the <code>example1.m</code> file, select the following part of the code, and execute it in MATLAB (right button &gt; <code>Evaluate selection</code> or <code>Shift+F7</code>).</p>
+<pre><code class="matlab">% Read an example image
+x = imread('peppers.png') ;
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Read an example image</span>
-x = imread(<span class="hljs-string">'peppers.png'</span>) ;
-
-<span class="hljs-comment">% Convert to single format</span>
+% Convert to single format
 x = im2single(x) ;
 
-<span class="hljs-comment">% Visualize the input x</span>
-figure(<span class="hljs-number">1</span>) ; clf ; imagesc(x) </code></pre>
+% Visualize the input x
+figure(1) ; clf ; imagesc(x) 
+</code></pre>
 
 <p>This should display an image of bell peppers in Figure 1:</p>
-
-<p><img height="400px" src="images/peppers.png" alt="peppers"></p>
-
+<p><img height=400px src="images/peppers.png" alt="peppers"/></p>
 <p>Use MATLAB <code>size</code> command to obtain the size of the array <code>x</code>. Note that the array <code>x</code> is converted to <em>single precision</em> format. This is because the underlying MatConvNet assumes that data is in single precision.</p>
-
 <blockquote>
-  <p><strong>Question.</strong> The third dimension of <code>x</code> is 3. Why?</p>
+<p><strong>Question.</strong> The third dimension of <code>x</code> is 3. Why?</p>
 </blockquote>
-
-<p>Now we will create a bank 10 of <script type="math/tex" id="MathJax-Element-19">5 \times 5 \times 3</script> filters.</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Create a bank of linear filters</span>
-w = <span class="hljs-built_in">randn</span>(<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">3</span>,<span class="hljs-number">10</span>,<span class="hljs-string">'single'</span>) ;</code></pre>
+<p>Now we will create a bank 10 of $5 \times 5 \times 3$ filters.</p>
+<pre><code class="matlab">% Create a bank of linear filters
+w = randn(5,5,3,10,'single') ;
+</code></pre>
 
 <p>The filters are in single precision as well. Note that <code>w</code> has four dimensions, packing 10 filters. Note also that each filter is not flat, but rather a volume with three layers. The next step is applying the filter to the image. This uses the <code>vl_nnconv</code> function from MatConvNet:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Apply the convolution operator</span>
-y = vl_nnconv(x, w, <span class="hljs-matrix">[]</span>) ;</code></pre>
+<pre><code class="matlab">% Apply the convolution operator
+y = vl_nnconv(x, w, []) ;
+</code></pre>
 
 <p><strong>Remark:</strong> You might have noticed that the third argument to the <code>vl_nnconv</code> function is the empty matrix <code>[]</code>. It can be otherwise used to pass a vector of bias terms to add to the output of each filter.</p>
-
-<p>The variable <code>y</code> contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map <script type="math/tex" id="MathJax-Element-20">\bx</script> with <script type="math/tex" id="MathJax-Element-21">K</script> channels. Furthermore, there are <script type="math/tex" id="MathJax-Element-22">K'</script> such filters, generating a <script type="math/tex" id="MathJax-Element-23">K'</script> dimensional map <script type="math/tex" id="MathJax-Element-24">\by</script> as follows <br>
-<script type="math/tex; mode=display" id="MathJax-Element-25">
+<p>The variable <code>y</code> contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map $\bx$ with $K$ channels. Furthermore, there are $K'$ such filters, generating a $K'$ dimensional map $\by$ as follows
+$$
 y_{i'j'k'} = \sum_{ijk} w_{ijkk'} x_{i+i',j+j',k}
-</script></p>
-
+$$</p>
 <blockquote>
-  <p><strong>Questions:</strong> Study carefully this expression and answer the following:</p>
-  
-  <ul>
-  <li>Given that the input map <script type="math/tex" id="MathJax-Element-26">\bx</script> has <script type="math/tex" id="MathJax-Element-27">M \times N \times K</script> dimensions and that each of the <script type="math/tex" id="MathJax-Element-28">K'</script> filters has dimension <script type="math/tex" id="MathJax-Element-29">M_f \times N_f \times K</script>, what is the dimension of <script type="math/tex" id="MathJax-Element-30">\by</script>?</li>
-  <li>Note that <script type="math/tex" id="MathJax-Element-31">x</script> is indexed by <script type="math/tex" id="MathJax-Element-32">i+i'</script> and <script type="math/tex" id="MathJax-Element-33">j+j'</script>, but that there is no plus sign between <script type="math/tex" id="MathJax-Element-34">k</script> and <script type="math/tex" id="MathJax-Element-35">k'</script>. Why?</li>
-  </ul>
-  
-  <p><strong>Task:</strong> check that the size of the variable <code>y</code> matches your calculations.</p>
+<p><strong>Questions:</strong> Study carefully this expression and answer the following:</p>
+<ul>
+<li>Given that the input map $\bx$ has $M \times N \times K$ dimensions and that each of the $K'$ filters has dimension $M_f \times N_f \times K$, what is the dimension of $\by$?</li>
+<li>Note that $x$ is indexed by $i+i'$ and $j+j'$, but that there is no plus sign between $k$ and $k'$. Why?</li>
+</ul>
+<p><strong>Task:</strong> check that the size of the variable <code>y</code> matches your calculations.</p>
 </blockquote>
-
 <p>We can now visualise the output <code>y</code> of the convolution. In order to do this, use the <a href="http://www.vlfeat.org/matlab/vl_imarraysc.html"><code>vl_imarraysc</code></a> function to display an image for each feature channel in <code>y</code>:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Visualize the output y</span>
-figure(<span class="hljs-number">2</span>) ; clf ; vl_imarraysc(y) ; colormap gray ;</code></pre>
+<pre><code class="matlab">% Visualize the output y
+figure(2) ; clf ; vl_imarraysc(y) ; colormap gray ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Question:</strong> Study the feature channels obtained. Most will likely contain a strong response in correspondences of edges in the input image <code>x</code>. Recall that <code>w</code> was obtained by drawing random numbers from a Gaussian distribution. Can you explain this phenomenon?</p>
+<p><strong>Question:</strong> Study the feature channels obtained. Most will likely contain a strong response in correspondences of edges in the input image <code>x</code>. Recall that <code>w</code> was obtained by drawing random numbers from a Gaussian distribution. Can you explain this phenomenon?</p>
 </blockquote>
-
 <p>So far filters preserve the resolution of the input feature map. However, it is often useful to <em>downsample the output</em>. This can be obtained by using the <code>stride</code> option in <code>vl_nnconv</code>:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Try again, downsampling the output</span>
-y_ds = vl_nnconv(x, w, <span class="hljs-matrix">[]</span>, <span class="hljs-string">'stride'</span>, <span class="hljs-number">16</span>) ;
-figure(<span class="hljs-number">3</span>) ; clf ; vl_imarraysc(y_ds) ; colormap gray ;</code></pre>
+<pre><code class="matlab">% Try again, downsampling the output
+y_ds = vl_nnconv(x, w, [], 'stride', 16) ;
+figure(3) ; clf ; vl_imarraysc(y_ds) ; colormap gray ;
+</code></pre>
 
 <p>As you should have noticed in a question above, applying a filter to an image or feature map interacts with the boundaries, making the output map smaller by an amount proportional to the size of the filters. If this is undesirable, then the input array can be padded with zeros by using the <code>pad</code> option:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Try padding</span>
-y_pad = vl_nnconv(x, w, <span class="hljs-matrix">[]</span>, <span class="hljs-string">'pad'</span>, <span class="hljs-number">4</span>) ;
-figure(<span class="hljs-number">4</span>) ; clf ; vl_imarraysc(y_pad) ; colormap gray ;</code></pre>
+<pre><code class="matlab">% Try padding
+y_pad = vl_nnconv(x, w, [], 'pad', 4) ;
+figure(4) ; clf ; vl_imarraysc(y_pad) ; colormap gray ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Task:</strong> Convince yourself that the previous code’s output has different boundaries compared to the code that does not use padding. Can you explain the result?</p>
+<p><strong>Task:</strong> Convince yourself that the previous code's output has different boundaries compared to the code that does not use padding. Can you explain the result?</p>
 </blockquote>
-
 <p>In order to consolidate what has been learned so far, we will now design a filter by hand:</p>
+<pre><code class="matlab">w = [0  1 0 ;
+     1 -4 1 ;
+     0  1 0 ] ;
+w = single(repmat(w, [1, 1, 3])) ;
+y_lap = vl_nnconv(x, w, []) ;
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs ">w = <span class="hljs-matrix">[<span class="hljs-number">0</span>  <span class="hljs-number">1</span> <span class="hljs-number">0</span> ;
-     <span class="hljs-number">1</span> -<span class="hljs-number">4</span> <span class="hljs-number">1</span> ;
-     <span class="hljs-number">0</span>  <span class="hljs-number">1</span> <span class="hljs-number">0</span> ]</span> ;
-w = single(<span class="hljs-built_in">repmat</span>(w, <span class="hljs-matrix">[<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>]</span>)) ;
-y_lap = vl_nnconv(x, w, <span class="hljs-matrix">[]</span>) ;
-
-figure(<span class="hljs-number">5</span>) ; clf ; colormap gray ;
-subplot(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>) ; 
-imagesc(y_lap) ; title(<span class="hljs-string">'filter output'</span>) ;
-subplot(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>) ;
-imagesc(-<span class="hljs-built_in">abs</span>(y_lap)) ; title(<span class="hljs-string">'- abs(filter output)'</span>) ;</code></pre>
+figure(5) ; clf ; colormap gray ;
+subplot(1,2,1) ; 
+imagesc(y_lap) ; title('filter output') ;
+subplot(1,2,2) ;
+imagesc(-abs(y_lap)) ; title('- abs(filter output)') ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Questions:</strong></p>
-  
-  <ul>
-  <li>What filter have we implemented?</li>
-  <li>How are the RGB colour channels processed by this filter?</li>
-  <li>What image structure are detected?</li>
-  </ul>
+<p><strong>Questions:</strong></p>
+<ul>
+<li>What filter have we implemented?</li>
+<li>How are the RGB colour channels processed by this filter?</li>
+<li>What image structure are detected?</li>
+</ul>
 </blockquote>
-
-
-
-<h3 id="part1-2" class="2">Part 1.2: non-linear gating</h3>
-
+<h3 id="part1.2">Part 1.2: non-linear gating</h3>
 <p>As we stated in the introduction, CNNs are obtained by composing several different functions. In addition to the linear filters shown in the <a href="#part1.1">previous part</a>, there are several non-linear operators as well.</p>
-
 <blockquote>
-  <p><strong>Question:</strong> Some of the functions in a CNN <em>must</em> be non-linear. Why?</p>
+<p><strong>Question:</strong> Some of the functions in a CNN <em>must</em> be non-linear. Why?</p>
 </blockquote>
-
-<p>The simplest non-linearity is obtained by following a linear filter by a <em>non-linear gating function</em>, applied identically to each component (i.e. point-wise) of a feature map. The simplest such function is the <em>Rectified Linear Unit (ReLU)</em> <br>
-<script type="math/tex; mode=display" id="MathJax-Element-36">
-  y_{ijk} = \max\{0, x_{ijk}\}.
-</script> <br>
-This function is implemented by <code>vl_relu</code>; let’s try this out:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs ">w = single(<span class="hljs-built_in">repmat</span>(<span class="hljs-matrix">[<span class="hljs-number">1</span> <span class="hljs-number">0</span> -<span class="hljs-number">1</span>]</span>, <span class="hljs-matrix">[<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>]</span>)) ;
-w = <span class="hljs-built_in">cat</span>(<span class="hljs-number">4</span>, w, -w) ;
-y = vl_nnconv(x, w, <span class="hljs-matrix">[]</span>) ;
+<p>The simplest non-linearity is obtained by following a linear filter by a <em>non-linear gating function</em>, applied identically to each component (i.e. point-wise) of a feature map. The simplest such function is the <em>Rectified Linear Unit (ReLU)</em>
+$$
+  y_{ijk} = \max{0, x_{ijk}}.
+$$
+This function is implemented by <code>vl_relu</code>; let's try this out:</p>
+<pre><code class="matlab">w = single(repmat([1 0 -1], [1, 1, 3])) ;
+w = cat(4, w, -w) ;
+y = vl_nnconv(x, w, []) ;
 z = vl_nnrelu(y) ;
 
-figure(<span class="hljs-number">6</span>) ; clf ; colormap gray ;
-subplot(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>) ; vl_imarraysc(y) ;
-subplot(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>) ; vl_imarraysc(z) ;</code></pre>
+figure(6) ; clf ; colormap gray ;
+subplot(1,2,1) ; vl_imarraysc(y) ;
+subplot(1,2,2) ; vl_imarraysc(z) ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Tasks:</strong></p>
-  
-  <ul>
-  <li>Run the code above and understand what the filter <script type="math/tex" id="MathJax-Element-37">\bw</script> is doing.</li>
-  <li>Explain the final result <script type="math/tex" id="MathJax-Element-38">\bz</script>.</li>
-  </ul>
-</blockquote>
-
-
-
-<h3 id="part1-3" class="3">Part 1.3: pooling</h3>
-
-<p>There are several other important operators in a CNN. One of them is <em>pooling</em>.  A pooling operator operates on individual feature channels, coalescing nearby feature values into one by the application of a suitable operator. Common choices include max-pooling (using the max operator) or sum-pooling (using summation). For example, <em>max-pooling</em> is defined as: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-39">
-   y_{ijk} = \max \{ y_{i'j'k} : i \leq i' < i+p, j \leq j' < j + p \}
-</script> <br>
-Max pooling is implemented by the <code>vl_nnpool</code> function. Try this now:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs ">y = vl_nnpool(x, <span class="hljs-number">15</span>) ;
-figure(<span class="hljs-number">6</span>) ; clf ; imagesc(y) ;</code></pre>
-
-<blockquote>
-  <p><strong>Question:</strong> look at the resulting image. Can you interpret the result?</p>
-</blockquote>
-
-<p>The function <code>vl_nnpool</code> supports subsampling and padding just like <code>vl_nnconv</code>. However, for max-pooling feature maps are padded with the value <script type="math/tex" id="MathJax-Element-40">-\infty</script> instead of 0. Why?</p>
-
-
-
-<h3 id="part1-4" class="4">Part 1.4: normalisation</h3>
-
-<p>Another important CNN building block is channel-wise normalisation. This operator normalises the vector of feature channels at each spatial location in the input map <script type="math/tex" id="MathJax-Element-41">\bx</script>. The form of the normalisation operator is actually rather curious: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-42">
-  y_{ijk'} = \frac{x_{ijk}}{\left(\kappa + \alpha \sum_{k\in G(k')}  x_{ijk}^2\right)^{\beta}}
-</script> <br>
-where <script type="math/tex" id="MathJax-Element-43">G(k) = \left[k - \lfloor \frac{\rho}{2} \rfloor, k + \lceil \frac{\rho}{2} \rceil\right] \cap \{1, 2, \dots, K\}</script> is a group of <script type="math/tex" id="MathJax-Element-44">\rho</script> consecutive feature channels in the input map.</p>
-
-<blockquote>
-  <p><strong>Task:</strong> Understand what this operator is doing. How would you set <script type="math/tex" id="MathJax-Element-45">\kappa</script>, <script type="math/tex" id="MathJax-Element-46">\alpha</script> and <script type="math/tex" id="MathJax-Element-47">\beta</script> to achieve simple <script type="math/tex" id="MathJax-Element-48">L^2</script> normalisation?</p>
-</blockquote>
-
-<p>Now let’s try this out:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs ">rho = <span class="hljs-number">5</span> ;
-kappa = <span class="hljs-number">0</span> ;
-alpha = <span class="hljs-number">1</span> ;
-<span class="hljs-built_in">beta</span> = <span class="hljs-number">0.5</span> ;
-y_nrm = vl_nnnormalize(x, <span class="hljs-matrix">[rho kappa alpha beta]</span>) ;
-figure(<span class="hljs-number">6</span>) ; clf ; imagesc(y_nrm) ;</code></pre>
-
-<blockquote>
-  <p><strong>Tasks:</strong> </p>
-  
-  <ul>
-  <li>Inspect the figure just obtained. Can you interpret it?</li>
-  <li>Compute the <script type="math/tex" id="MathJax-Element-49">L^2</script> norm of the feature channels in the output map <code>y_nrm</code>. What do you notice? </li>
-  <li>Explain this result in relation to the particular choice of the parameters <script type="math/tex" id="MathJax-Element-50">\rho</script>,  <script type="math/tex" id="MathJax-Element-51">\kappa</script>, <script type="math/tex" id="MathJax-Element-52">\alpha</script> and <script type="math/tex" id="MathJax-Element-53">\beta</script>.</li>
-  </ul>
-</blockquote>
-
-
-
-<h2 id="part-2-back-propagation-and-derivatives">Part 2: back-propagation and derivatives</h2>
-
-<p>The parameters of a CNN <script type="math/tex" id="MathJax-Element-54">\bw=(\bw_1,\dots\bw_L)</script> should be learned in such a manner that the overall CNN function  <script type="math/tex" id="MathJax-Element-55">\bz = f(\bx;\bw)</script> achieves a desired goal. In some cases,  the goal is to model the distribution of the data, which leads to a <em>generative objective</em>. Here, however, we will use <script type="math/tex" id="MathJax-Element-56">f</script> as a <em>regressor</em> and obtain it by minimising a <em>discriminative objective</em>. In simple terms, we are given:</p>
-
+<p><strong>Tasks:</strong></p>
 <ul>
-<li>examples of the desired input-output relations <script type="math/tex" id="MathJax-Element-57">(\bx_1,\bz_1), \dots, (\bx_n,\bz_n)</script> where <script type="math/tex" id="MathJax-Element-58">\bx_i</script> are input data and <script type="math/tex" id="MathJax-Element-59">\bz_i</script> corresponding output values;</li>
-<li>and a loss <script type="math/tex" id="MathJax-Element-60">\ell(\bz,\hat\bz)</script> that expresses the penalty for predicting <script type="math/tex" id="MathJax-Element-61">\hat\bz</script> instead of <script type="math/tex" id="MathJax-Element-62">\bz</script>.</li>
+<li>Run the code above and understand what the filter $\bw$ is doing.</li>
+<li>Explain the final result $\bz$.</li>
 </ul>
+</blockquote>
+<h3 id="part1.3">Part 1.3: pooling</h3>
+<p>There are several other important operators in a CNN. One of them is <em>pooling</em>.  A pooling operator operates on individual feature channels, coalescing nearby feature values into one by the application of a suitable operator. Common choices include max-pooling (using the max operator) or sum-pooling (using summation). For example, <em>max-pooling</em> is defined as:
+$$
+   y_{ijk} = \max { y_{i'j'k} : i \leq i' &lt; i+p, j \leq j' &lt; j + p }
+$$
+Max pooling is implemented by the <code>vl_nnpool</code> function. Try this now:</p>
+<pre><code class="matlab">y = vl_nnpool(x, 15) ;
+figure(6) ; clf ; imagesc(y) ;
+</code></pre>
 
-<p>We use those to write the empirical loss of the CNN <script type="math/tex" id="MathJax-Element-63">f</script> by averaging over the examples: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-64">
+<blockquote>
+<p><strong>Question:</strong> look at the resulting image. Can you interpret the result?</p>
+</blockquote>
+<p>The function <code>vl_nnpool</code> supports subsampling and padding just like <code>vl_nnconv</code>. However, for max-pooling feature maps are padded with the value $-\infty$ instead of 0. Why?</p>
+<h3 id="part1.4">Part 1.4: normalisation</h3>
+<p>Another important CNN building block is channel-wise normalisation. This operator normalises the vector of feature channels at each spatial location in the input map $\bx$. The form of the normalisation operator is actually rather curious:
+$$
+  y_{ijk'} = \frac{x_{ijk}}{\left(\kappa + \alpha \sum_{k\in G(k')}  x_{ijk}^2\right)^{\beta}}
+$$
+where $G(k) = \left[k - \lfloor \frac{\rho}{2} \rfloor, k + \lceil \frac{\rho}{2} \rceil\right] \cap {1, 2, \dots, K}$ is a group of $\rho$ consecutive feature channels in the input map.</p>
+<blockquote>
+<p><strong>Task:</strong> Understand what this operator is doing. How would you set $\kappa$, $\alpha$ and $\beta$ to achieve simple $L^2$ normalisation?</p>
+</blockquote>
+<p>Now let's try this out:</p>
+<pre><code class="matlab">rho = 5 ;
+kappa = 0 ;
+alpha = 1 ;
+beta = 0.5 ;
+y_nrm = vl_nnnormalize(x, [rho kappa alpha beta]) ;
+figure(6) ; clf ; imagesc(y_nrm) ;
+</code></pre>
+
+<blockquote>
+<p><strong>Tasks:</strong> </p>
+<ul>
+<li>Inspect the figure just obtained. Can you interpret it?</li>
+<li>Compute the $L^2$ norm of the feature channels in the output map <code>y_nrm</code>. What do you notice? </li>
+<li>Explain this result in relation to the particular choice of the parameters $\rho$,  $\kappa$, $\alpha$ and $\beta$.</li>
+</ul>
+</blockquote>
+<h2 id="part-2-back-propagation-and-derivatives">Part 2: back-propagation and derivatives</h2>
+<p>The parameters of a CNN $\bw=(\bw_1,\dots\bw_L)$ should be learned in such a manner that the overall CNN function  $\bz = f(\bx;\bw)$ achieves a desired goal. In some cases,  the goal is to model the distribution of the data, which leads to a <em>generative objective</em>. Here, however, we will use $f$ as a <em>regressor</em> and obtain it by minimising a <em>discriminative objective</em>. In simple terms, we are given:</p>
+<ul>
+<li>examples of the desired input-output relations $(\bx_1,\bz_1), \dots, (\bx_n,\bz_n)$ where $\bx_i$ are input data and $\bz_i$ corresponding output values;</li>
+<li>and a loss $\ell(\bz,\hat\bz)$ that expresses the penalty for predicting $\hat\bz$ instead of $\bz$.</li>
+</ul>
+<p>We use those to write the empirical loss of the CNN $f$ by averaging over the examples:
+$$
 L(\bw) = \frac{1}{n} \sum_{i=1}^n \ell(\bz_i, f(\bx_i;\bw))
-</script> <br>
-Note that the composition of the function <script type="math/tex" id="MathJax-Element-65">f</script> with the loss <script type="math/tex" id="MathJax-Element-66">\ell</script> can be though of as a CNN with one more layer (called a <em>loss layer</em>). Hence, with a slight abuse of notation, in the rest of this part we incorporate the loss in the function <script type="math/tex" id="MathJax-Element-67">f</script> (which therefore is a map <script type="math/tex" id="MathJax-Element-68">\mathcal{X}\rightarrow\mathbb{R}</script>) and do not talk about it explicitly anymore.</p>
-
-<p>The simplest algorithm to minimise <script type="math/tex" id="MathJax-Element-69">L</script>, and in fact one that is used in practice, is <em>gradient descent</em>. The idea is simple: compute the gradient of the objective <script type="math/tex" id="MathJax-Element-70">L</script> at a current solution <script type="math/tex" id="MathJax-Element-71">\bw^t</script> and then update the latter along the direction of fastest descent of <script type="math/tex" id="MathJax-Element-72">L</script>: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-73">
+$$
+Note that the composition of the function $f$ with the loss $\ell$ can be though of as a CNN with one more layer (called a <em>loss layer</em>). Hence, with a slight abuse of notation, in the rest of this part we incorporate the loss in the function $f$ (which therefore is a map $\mathcal{X}\rightarrow\mathbb{R}$) and do not talk about it explicitly anymore.</p>
+<p>The simplest algorithm to minimise $L$, and in fact one that is used in practice, is <em>gradient descent</em>. The idea is simple: compute the gradient of the objective $L$ at a current solution $\bw^t$ and then update the latter along the direction of fastest descent of $L$:
+$$
  \bw^{t+1} = \bw^{t} - \eta_t \frac{\partial f}{\partial \bw}(\bw^t)
-</script> <br>
-where <script type="math/tex" id="MathJax-Element-74">\eta_t \in \mathbb{R}_+</script> is the <em>learning rate</em>.</p>
-
-
-
+$$
+where $\eta_t \in \mathbb{R}_+$ is the <em>learning rate</em>.</p>
 <h3 id="part-21-the-theory-of-back-propagation">Part 2.1: the theory of back-propagation</h3>
-
-<p>The basic computational problem to solve is the calculation of the gradient of the function with respect to the parameter <script type="math/tex" id="MathJax-Element-75">\bw</script>. Since <script type="math/tex" id="MathJax-Element-76">f</script> is the composition of several functions, the key ingredient is the <em>chain rule</em>: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-77">
+<p>The basic computational problem to solve is the calculation of the gradient of the function with respect to the parameter $\bw$. Since $f$ is the composition of several functions, the key ingredient is the <em>chain rule</em>:
+$$
 \begin{align}
- \frac{\partial f}{\partial \bw_l} &= 
+ \frac{\partial f}{\partial \bw_l} &amp;= 
   \frac{\partial}{\partial \bw_l}
   f_L(\dots f_2(f_1(\bx;\bw_1);\bw_2)\dots),\bw_{L})
-  \\
-  &= 
+  \
+  &amp;= 
   \frac{\partial \vc f_L}{\partial \vc\bx_L^\top}
   \frac{\partial \vc f_{L-1}}{\partial \vc\bx_{L-1}^\top}
   \dots
   \frac{\partial \vc f_{l+1}}{\partial \vc\bx_{l+1}^\top}
   \frac{\partial \vc f_l}{\partial \bw_l^\top}
 \end{align}
-</script> <br>
-The notation requires some explanation. Recall that each function <script type="math/tex" id="MathJax-Element-78">f_l</script> is a map from a <script type="math/tex" id="MathJax-Element-79">M\times N\times K</script> array to a <script type="math/tex" id="MathJax-Element-80">M' \times N' \times K'</script> array. The operator <script type="math/tex" id="MathJax-Element-81">\vc</script> <em>vectorises</em> such arrays by stacking their elements in a column vector (the stacking order is arbitrary but conventionally column-major). The symbol <script type="math/tex" id="MathJax-Element-82">\partial \vc f_l / \partial \vc \bx_l^\top</script> then denotes the derivative of a column vector of output variables by a row vector of input variables. Note that <script type="math/tex" id="MathJax-Element-83">\bw_l</script> is already assumed to be a column vector so it does not require explicit vectorisation.</p>
-
+$$
+The notation requires some explanation. Recall that each function $f_l$ is a map from a $M\times N\times K$ array to a $M' \times N' \times K'$ array. The operator $\vc$ <em>vectorises</em> such arrays by stacking their elements in a column vector (the stacking order is arbitrary but conventionally column-major). The symbol $\partial \vc f_l / \partial \vc \bx_l^\top$ then denotes the derivative of a column vector of output variables by a row vector of input variables. Note that $\bw_l$ is already assumed to be a column vector so it does not require explicit vectorisation.</p>
 <blockquote>
-  <p><strong>Questions:</strong> Make sure you understand the structure of this formula and answer the following:</p>
-  
-  <ul>
-  <li><script type="math/tex" id="MathJax-Element-84">\partial \vc f_l / \partial \vc \bx_l^\top</script> is a matrix. What are its dimensions?</li>
-  <li>The formula can be rewritten with a slightly different notation by replacing the symbols <script type="math/tex" id="MathJax-Element-85">f_l</script> with the symbols <script type="math/tex" id="MathJax-Element-86">\bx_{l+1}</script>. If you do so, do you notice any formal cancellation?</li>
-  <li>The formula only includes the derivative symbols. However, these derivatives must be computed at a well defined point. What is this point?</li>
-  </ul>
+<p><strong>Questions:</strong> Make sure you understand the structure of this formula and answer the following:</p>
+<ul>
+<li>$\partial \vc f_l / \partial \vc \bx_l^\top$ is a matrix. What are its dimensions?</li>
+<li>The formula can be rewritten with a slightly different notation by replacing the symbols $f_l$ with the symbols $\bx_{l+1}$. If you do so, do you notice any formal cancellation?</li>
+<li>The formula only includes the derivative symbols. However, these derivatives must be computed at a well defined point. What is this point?</li>
+</ul>
 </blockquote>
-
-<p>To apply the chain rule we must be able to compute, for each function <script type="math/tex" id="MathJax-Element-87">f_l</script>, its derivative with respect to the parameters <script type="math/tex" id="MathJax-Element-88">\bw_l</script> as well as its input <script type="math/tex" id="MathJax-Element-89">\bx_l</script>. While this could be done naively, a problem is the very high dimensionality of the matrices involved in this calculation as these are <script type="math/tex" id="MathJax-Element-90">M'N'K' \times MNK</script> arrays. We will now introduce a “trick” that allows this to be reduced to working with <script type="math/tex" id="MathJax-Element-91">MNK</script> numbers only and which will yield the <em>back-propagation algorithm</em>. </p>
-
-<p>The key observation is that we are not after <script type="math/tex" id="MathJax-Element-92">\partial \vc f_l / \partial \bw_l^\top</script> but after <script type="math/tex" id="MathJax-Element-93">\partial f/ \partial\bw_l^\top</script>: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-94">
+<p>To apply the chain rule we must be able to compute, for each function $f_l$, its derivative with respect to the parameters $\bw_l$ as well as its input $\bx_l$. While this could be done naively, a problem is the very high dimensionality of the matrices involved in this calculation as these are $M'N'K' \times MNK$ arrays. We will now introduce a ``trick'' that allows this to be reduced to working with $MNK$ numbers only and which will yield the <em>back-propagation algorithm</em>. </p>
+<p>The key observation is that we are not after $\partial \vc f_l / \partial \bw_l^\top$ but after $\partial f/ \partial\bw_l^\top$:
+$$
  \frac{\partial f}{\partial\bw_l^\top}
  =
  \frac{\partial g_{l+1}}{\partial \vc \bx_{l+1}^\top}
   \frac{\partial \vc f_l}{\partial \bw_l^\top}
-</script> <br>
-where <script type="math/tex" id="MathJax-Element-95">g_{l+1} = f_L \circ \dots \circ f_{l+1}</script> is the “tail” of the CNN.</p>
-
+$$
+where $g_{l+1} = f_L \circ \dots \circ f_{l+1}$ is the ``tail'' of the CNN.</p>
 <blockquote>
-  <p><strong>Question:</strong> Explain why the dimensions of the vectors <script type="math/tex" id="MathJax-Element-96">\partial g_{l+1}/\partial \vc \bx_{l+1}</script> and <script type="math/tex" id="MathJax-Element-97">\partial f/\partial \bw_{l}</script> equals the number of elements in <script type="math/tex" id="MathJax-Element-98">\bx_{l+1}</script> and <script type="math/tex" id="MathJax-Element-99">\bw_l</script> respectively. Hence, in particular, the symbol <script type="math/tex" id="MathJax-Element-100">\partial g_{l+1}/\partial \bx_{l+1}</script> (without vectorisation) denotes an array with the same size of <script type="math/tex" id="MathJax-Element-101">\bx_{l+1}</script>.</p>
-  
-  <p><strong>Hint:</strong> recall that the last layer is the loss.</p>
+<p><strong>Question:</strong> Explain why the dimensions of the vectors $\partial g_{l+1}/\partial \vc \bx_{l+1}$ and $\partial f/\partial \bw_{l}$ equals the number of elements in $\bx_{l+1}$ and $\bw_l$ respectively. Hence, in particular, the symbol $\partial g_{l+1}/\partial \bx_{l+1}$ (without vectorisation) denotes an array with the same size of $\bx_{l+1}$.</p>
+<p><strong>Hint:</strong> recall that the last layer is the loss.</p>
 </blockquote>
-
-<p>Hence the algorithm can focus on computing the derivatives of <script type="math/tex" id="MathJax-Element-102">g_{l}</script> instead of <script type="math/tex" id="MathJax-Element-103">f_{l}</script> which are far lower-dimensional. To see how this can be done iteratively, decompose <script type="math/tex" id="MathJax-Element-104">g_l</script> as: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-105">
+<p>Hence the algorithm can focus on computing the derivatives of $g_{l}$ instead of $f_{l}$ which are far lower-dimensional. To see how this can be done iteratively, decompose $g_l$ as:
+$$
  \bx_{l}
  \longrightarrow 
  \underset{\displaystyle\underset{\displaystyle\bw_l}{\uparrow}}{\boxed{f_l}} 
  \longrightarrow
- \bx_{l+1}  
+ \bx_{l+1}<br />
  \longrightarrow 
  \boxed{g_{l+1}}
  \longrightarrow
  \bx_{L}
-</script> <br>
-Then the key of the iteration is obtaining the derivatives for layer <script type="math/tex" id="MathJax-Element-106">l</script> given the ones for layer <script type="math/tex" id="MathJax-Element-107">l+1</script>:</p>
-
+$$
+Then the key of the iteration is obtaining the derivatives for layer $l$ given the ones for layer $l+1$:</p>
 <ul>
-<li>Input: <br>
-<ul><li>the derivative <script type="math/tex" id="MathJax-Element-108">\partial g_{l+1}/\partial \bx_{l+1}</script>.</li></ul></li>
-<li>Output: <br>
-<ul><li>the derivative <script type="math/tex" id="MathJax-Element-109">\partial g_{l}/\partial \bx_{l}</script></li>
-<li>the derivative  <script type="math/tex" id="MathJax-Element-110">\partial g_{l}/\partial \bw_{l}</script></li></ul></li>
+<li>Input:</li>
+<li>the derivative $\partial g_{l+1}/\partial \bx_{l+1}$.</li>
+<li>Output:</li>
+<li>the derivative $\partial g_{l}/\partial \bx_{l}$</li>
+<li>the derivative  $\partial g_{l}/\partial \bw_{l}$</li>
 </ul>
-
 <blockquote>
-  <p><strong>Question:</strong> Suppose that <script type="math/tex" id="MathJax-Element-111">f_l</script> is the function <script type="math/tex" id="MathJax-Element-112">\bx_{l+1} = A \bx_{l}</script> where <script type="math/tex" id="MathJax-Element-113">\bx_{l}</script> and <script type="math/tex" id="MathJax-Element-114">\bx_{l+1}</script> are column vectors. Suppose that <script type="math/tex" id="MathJax-Element-115">B = \partial g_{l+1}/\partial \bx_{l+1} </script> is given. Derive an expression for <script type="math/tex" id="MathJax-Element-116">C = \partial g_{l}/\partial \bx_{l}</script> and an expression for <script type="math/tex" id="MathJax-Element-117">D =  \partial g_{l}/\partial \bw_{l}</script>.</p>
+<p><strong>Question:</strong> Suppose that $f_l$ is the function $\bx_{l+1} = A \bx_{l}$ where $\bx_{l}$ and $\bx_{l+1}$ are column vectors. Suppose that $B = \partial g_{l+1}/\partial \bx_{l+1} $ is given. Derive an expression for $C = \partial g_{l}/\partial \bx_{l}$ and an expression for $D =  \partial g_{l}/\partial \bw_{l}$.</p>
 </blockquote>
-
-
-
 <h3 id="part-21-using-back-propagation-in-practice">Part 2.1: using back-propagation in practice</h3>
-
-<p>A key feature of MatConvNet and similar neural network packages is the ability to support back-propagation. In order to do so, lets focus on a single computational block <script type="math/tex" id="MathJax-Element-118">f</script>, followed by a function <script type="math/tex" id="MathJax-Element-119">g</script>: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-120">
+<p>A key feature of MatConvNet and similar neural network packages is the ability to support back-propagation. In order to do so, lets focus on a single computational block $f$, followed by a function $g$:
+$$
  \bx
  \longrightarrow 
  \underset{\displaystyle\underset{\displaystyle\bw}{\uparrow}}{\boxed{f}} 
@@ -433,652 +350,474 @@ Then the key of the iteration is obtaining the derivatives for layer <script typ
  \boxed{g}
  \longrightarrow
  z
-</script> <br>
-where <em><script type="math/tex" id="MathJax-Element-121">z</script> is assumed to be a scalar</em>. Then each computation block (for example <code>vl_nnconv</code> or <code>vl_nnpool</code>) can compute <script type="math/tex" id="MathJax-Element-122">\partial z / \partial \bx</script> and <script type="math/tex" id="MathJax-Element-123">\partial z / \partial \bw</script> given as input <script type="math/tex" id="MathJax-Element-124">\bx</script> and <script type="math/tex" id="MathJax-Element-125">\partial z / \partial \by</script>. Let’s put this into practice:</p>
+$$
+where <em>$z$ is assumed to be a scalar</em>. Then each computation block (for example <code>vl_nnconv</code> or <code>vl_nnpool</code>) can compute $\partial z / \partial \bx$ and $\partial z / \partial \bw$ given as input $\bx$ and $\partial z / \partial \by$. Let's put this into practice:</p>
+<pre><code class="matlab">% Read an example image
+x = im2single(imread('peppers.png')) ;
 
+% Create a bank of linear filters and apply them to the image
+w = randn(5,5,3,10,'single') ;
+y = vl_nnconv(x, w, []) ;
 
+% Create the derivative dz/dy
+dzdy = randn(size(y), 'single') ;
 
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Read an example image</span>
-x = im2single(imread(<span class="hljs-string">'peppers.png'</span>)) ;
-
-<span class="hljs-comment">% Create a bank of linear filters and apply them to the image</span>
-w = <span class="hljs-built_in">randn</span>(<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">3</span>,<span class="hljs-number">10</span>,<span class="hljs-string">'single'</span>) ;
-y = vl_nnconv(x, w, <span class="hljs-matrix">[]</span>) ;
-
-<span class="hljs-comment">% Create the derivative dz/dy</span>
-dzdy = <span class="hljs-built_in">randn</span>(<span class="hljs-built_in">size</span>(y), <span class="hljs-string">'single'</span>) ;
-
-<span class="hljs-comment">% Back-propagation</span>
-<span class="hljs-matrix">[dzdx, dzdw]</span> = vl_nnconv(x, w, <span class="hljs-matrix">[]</span>, dzdy) ;</code></pre>
+% Back-propagation
+[dzdx, dzdw] = vl_nnconv(x, w, [], dzdy) ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Task:</strong> Run the code above and check the dimensions of <code>dzdx</code> and <code>dzdy</code>. Does this matches your expectations?</p>
+<p><strong>Task:</strong> Run the code above and check the dimensions of <code>dzdx</code> and <code>dzdy</code>. Does this matches your expectations?</p>
 </blockquote>
-
 <p>An advantage of this modular view is that new building blocks can be coded and added to the architecture in a simple manner. However, it is easy to make mistakes in the calculation of complex derivatives. Hence, it is a good idea to verify results numerically. Consider the following piece of code:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Check the derivative numerically</span>
-ex = <span class="hljs-built_in">randn</span>(<span class="hljs-built_in">size</span>(x), <span class="hljs-string">'single'</span>) ;
-eta = <span class="hljs-number">0.0001</span> ;
+<pre><code class="matlab">% Check the derivative numerically
+ex = randn(size(x), 'single') ;
+eta = 0.0001 ;
 xp = x + eta * ex  ;
-yp = vl_nnconv(xp, w, <span class="hljs-matrix">[]</span>) ;
+yp = vl_nnconv(xp, w, []) ;
 
 dzdx_empirical = sum(dzdy(:) .* (yp(:) - y(:)) / eta) ;
 dzdx_computed = sum(dzdx(:) .* ex(:)) ;
 
 fprintf(...
-  <span class="hljs-string">'der: empirical: %f, computed: %f, error: %.2f %%\n'</span>, ...
+  'der: empirical: %f, computed: %f, error: %.2f %%\n', ...
   dzdx_empirical, dzdx_computed, ...
-  <span class="hljs-built_in">abs</span>(<span class="hljs-number">1</span> - dzdx_empirical/dzdx_computed)*<span class="hljs-number">100</span>) ;</code></pre>
+  abs(1 - dzdx_empirical/dzdx_computed)*100) ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Questions:</strong></p>
-  
-  <ul>
-  <li>What is the meaning of <code>ex</code> in the code above? </li>
-  <li>What are the derivatives <code>dzdx_empirical</code> and <code>dzdx_computed</code>?</li>
-  </ul>
-  
-  <p><strong>Tasks:</strong></p>
-  
-  <ul>
-  <li>Run the code and convince yourself that <code>vl_nnconv</code> derivatives is (probably) correct.</li>
-  <li>Create a new version of this code to test the derivative calculation with respect to <script type="math/tex" id="MathJax-Element-126">\bw</script>.</li>
-  </ul>
+<p><strong>Questions:</strong></p>
+<ul>
+<li>What is the meaning of <code>ex</code> in the code above? </li>
+<li>What are the derivatives <code>dzdx_empirical</code> and <code>dzdx_computed</code>?</li>
+</ul>
+<p><strong>Tasks:</strong></p>
+<ul>
+<li>Run the code and convince yourself that <code>vl_nnconv</code> derivatives is (probably) correct.</li>
+<li>Create a new version of this code to test the derivative calculation with respect to $\bw$.</li>
+</ul>
 </blockquote>
-
 <p>We are now ready to build our first elementary CNN, composed of just two layers, and to compute its derivatives:</p>
+<pre><code class="matlab">% Parameters of the CNN
+w1 = randn(5,5,3,10,'single') ;
+rho2 = 10 ;
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Parameters of the CNN</span>
-w1 = <span class="hljs-built_in">randn</span>(<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">3</span>,<span class="hljs-number">10</span>,<span class="hljs-string">'single'</span>) ;
-rho2 = <span class="hljs-number">10</span> ;
-
-<span class="hljs-comment">% Run the CNN forward</span>
-x1 = im2single(imread(<span class="hljs-string">'peppers.png'</span>)) ;
-x2 = vl_nnconv(x1, w1, <span class="hljs-matrix">[]</span>) ;
+% Run the CNN forward
+x1 = im2single(imread('peppers.png')) ;
+x2 = vl_nnconv(x1, w1, []) ;
 x3 = vl_nnpool(x2, rho2) ;
 
-<span class="hljs-comment">% Create the derivative dz/dx3</span>
-dzdx3 = <span class="hljs-built_in">randn</span>(<span class="hljs-built_in">size</span>(x3), <span class="hljs-string">'single'</span>) ;
+% Create the derivative dz/dx3
+dzdx3 = randn(size(x3), 'single') ;
 
-<span class="hljs-comment">% Run the CNN backward</span>
+% Run the CNN backward
 dzdx2 = vl_nnpool(x2, rho2, dzdx3) ;
-<span class="hljs-matrix">[dzdx1, dzdw1]</span> = vl_nnconv(x1, w1, <span class="hljs-matrix">[]</span>, dzdx2) ;</code></pre>
+[dzdx1, dzdw1] = vl_nnconv(x1, w1, [], dzdx2) ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Question:</strong> Note that the last derivative in the CNN is <code>dzdx3</code>. Here, for the sake of the example, this derivative is initialised randomly. In a practical application, what would this derivative represent?</p>
+<p><strong>Question:</strong> Note that the last derivative in the CNN is <code>dzdx3</code>. Here, for the sake of the example, this derivative is initialised randomly. In a practical application, what would this derivative represent?</p>
 </blockquote>
-
 <p>We can now use the same technique as before to check that the derivative computed through back-propagation are correct.</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Check the derivative numerically</span>
-ew1 = <span class="hljs-built_in">randn</span>(<span class="hljs-built_in">size</span>(w1), <span class="hljs-string">'single'</span>) ;
-eta = <span class="hljs-number">0.0001</span> ;
+<pre><code class="matlab">% Check the derivative numerically
+ew1 = randn(size(w1), 'single') ;
+eta = 0.0001 ;
 w1p = w1 + eta * ew1  ;
 
 x1p = x1 ;
-x2p = vl_nnconv(x1p, w1p, <span class="hljs-matrix">[]</span>) ;
+x2p = vl_nnconv(x1p, w1p, []) ;
 x3p = vl_nnpool(x2p, rho2) ;
 
 dzdw1_empirical = sum(dzdx3(:) .* (x3p(:) - x3(:)) / eta) ;
 dzdw1_computed = sum(dzdw1(:) .* ew1(:)) ;
 
 fprintf(...
-  <span class="hljs-string">'der: empirical: %f, computed: %f, error: %.2f %%\n'</span>, ...
+  'der: empirical: %f, computed: %f, error: %.2f %%\n', ...
   dzdw1_empirical, dzdw1_computed, ...
-  <span class="hljs-built_in">abs</span>(<span class="hljs-number">1</span> - dzdw1_empirical/dzdw1_computed)*<span class="hljs-number">100</span>) ;</code></pre>
-
-
+  abs(1 - dzdw1_empirical/dzdw1_computed)*100) ;
+</code></pre>
 
 <h2 id="part-3-learning-a-tiny-cnn">Part 3: learning a tiny CNN</h2>
-
-<p>In this part we will learn a very simple CNN. The CNN is composed of exactly two layers: a convolutional layer and a max-pooling layer: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-127">
+<p>In this part we will learn a very simple CNN. The CNN is composed of exactly two layers: a convolutional layer and a max-pooling layer:
+$$
 \bx_2 = W * \bx_1 + b, \qquad \bx_3 = \operatorname{maxpool}_\rho \bx_2.
-</script> <br>
-<script type="math/tex" id="MathJax-Element-128">W</script> contains a single <script type="math/tex" id="MathJax-Element-129">3\times 3</script> square filter, so that <script type="math/tex" id="MathJax-Element-130">b</script> is a scalar. and the input image <script type="math/tex" id="MathJax-Element-131">\bx=\bx_1</script> has a single channel.</p>
-
+$$
+$W$ contains a single $3\times 3$ square filter, so that $b$ is a scalar. and the input image $\bx=\bx_1$ has a single channel.</p>
 <blockquote>
-  <p><strong>Task</strong></p>
-  
-  <ul>
-  <li>Open the file <code>tinycnn.m</code> and inspect the code. Convince yourself that the code computes the CNN just described.</li>
-  <li>Look at the paddings used in the code. If the input image <script type="math/tex" id="MathJax-Element-132">\bx_1</script> has dimensions <script type="math/tex" id="MathJax-Element-133">M\times N</script>, what is the dimension of the output feature map <script type="math/tex" id="MathJax-Element-134">\bx_3</script>?</li>
-  </ul>
+<p><strong>Task</strong></p>
+<ul>
+<li>Open the file <code>tinycnn.m</code> and inspect the code. Convince yourself that the code computes the CNN just described.</li>
+<li>Look at the paddings used in the code. If the input image $\bx_1$ has dimensions $M\times N$, what is the dimension of the output feature map $\bx_3$?
+</li>
+</ul>
 </blockquote>
-
 <p>In the rest of the section we will learn the CNN parameters in order to extract blob-like structures from images, such as the ones in the following image:</p>
-
-<p><img width="350px" src="images/dots.jpg" alt="sentence-lato"></p>
-
-
-
+<p><img width=350px src="images/dots.jpg" alt="sentence-lato"/></p>
 <h3 id="part-31-training-data-and-labels">Part 3.1: training data and labels</h3>
-
 <p>The first step is to load the image <code>data/dots.jpg</code> and to use the supplied <code>extractBlackBlobs</code> function to extract all the black dots in the image.</p>
+<pre><code class="matlab">% Load an image
+im = rgb2gray(im2single(imread('data/dots.jpg'))) ;
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Load an image</span>
-im = rgb2gray(im2single(imread(<span class="hljs-string">'data/dots.jpg'</span>))) ;
-
-<span class="hljs-comment">% Compute the location of black blobs in the image</span>
-<span class="hljs-matrix">[pos,neg]</span> = extractBlackBlobs(im) ;</code></pre>
+% Compute the location of black blobs in the image
+[pos,neg] = extractBlackBlobs(im) ;
+</code></pre>
 
 <p>The arrays <code>pos</code> and <code>neg</code> contain now pixel labels and  will be used as <em>annotations</em> for the supervised training of the CNN. These annotations can be visualised as follows:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs ">figure(<span class="hljs-number">1</span>) ; clf ; 
-subplot(<span class="hljs-number">1</span>,<span class="hljs-number">3</span>,<span class="hljs-number">1</span>) ; imagesc(im) ; axis equal ; title(<span class="hljs-string">'image'</span>) ;
-subplot(<span class="hljs-number">1</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>) ; imagesc(pos) ; axis equal ; title(<span class="hljs-string">'positive points (blob centres)'</span>) ;
-subplot(<span class="hljs-number">1</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>) ; imagesc(neg) ; axis equal ; title(<span class="hljs-string">'negative points (not a blob)'</span>) ;
-colormap gray ; </code></pre>
+<pre><code class="matlab">figure(1) ; clf ; 
+subplot(1,3,1) ; imagesc(im) ; axis equal ; title('image') ;
+subplot(1,3,2) ; imagesc(pos) ; axis equal ; title('positive points (blob centres)') ;
+subplot(1,3,3) ; imagesc(neg) ; axis equal ; title('negative points (not a blob)') ;
+colormap gray ; 
+</code></pre>
 
 <blockquote>
-  <p><strong>Task:</strong> Inspect <code>pos</code> and <code>neg</code> and convince yourself that:</p>
-  
-  <ul>
-  <li><code>pos</code> contains a single <code>true</code> value in correspondence of each blob centre;</li>
-  <li><code>neg</code> contains a <code>true</code> value for each pixel sufficiently far away from a blob.</li>
-  </ul>
-  
-  <p>Are there pixels for which both <code>pos</code> and <code>neg</code> evaluate to false?</p>
+<p><strong>Task:</strong> Inspect <code>pos</code> and <code>neg</code> and convince yourself that:</p>
+<ul>
+<li><code>pos</code> contains a single <code>true</code> value in correspondence of each blob centre;</li>
+<li><code>neg</code> contains a <code>true</code> value for each pixel sufficiently far away from a blob.</li>
+</ul>
+<p>Are there pixels for which both <code>pos</code> and <code>neg</code> evaluate to false?</p>
 </blockquote>
-
-
-
 <h3 id="part-32-image-preprocessing">Part 3.2: image preprocessing</h3>
-
 <p>Before we attempt to train the CNN, the image is pre-processed to remove its mean value. It is also smoothed by applying a Gaussian kernel of standard deviation 3 pixels:</p>
+<pre><code class="matlab">% Pre-smooth the image
+im = vl_imsmooth(im,3) ;
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Pre-smooth the image</span>
-im = vl_imsmooth(im,<span class="hljs-number">3</span>) ;
-
-<span class="hljs-comment">% Subtract median value</span>
-im = im - median(im(:)) ;</code></pre>
+% Subtract median value
+im = im - median(im(:)) ;
+</code></pre>
 
 <p>We will come back to this preprocessing steps later.</p>
-
-
-
 <h3 id="part-33-learning-with-gradient-descent">Part 3.3: learning with gradient descent</h3>
-
-<p>We will now setup a learning problem to learn <script type="math/tex" id="MathJax-Element-135">W</script> and <script type="math/tex" id="MathJax-Element-136">b</script> to detect black blobs in images. Recall that the CNN computes for each image pixel <script type="math/tex" id="MathJax-Element-137">(u,v)</script> a score <script type="math/tex" id="MathJax-Element-138">f(\bx;\bw,b)_{(u,v)}</script>. We would like this score to be:</p>
-
+<p>We will now setup a learning problem to learn $W$ and $b$ to detect black blobs in images. Recall that the CNN computes for each image pixel $(u,v)$ a score $f(\bx;\bw,b)_{(u,v)}$. We would like this score to be:</p>
 <ul>
-<li>at least as large as 1 for any pixel that is marked as a blob centre (<code>pos</code> or <script type="math/tex" id="MathJax-Element-139">(u,v)\in\cP</script>) and</li>
-<li>at most zero for any pixel that is marked as being far away from a blob (<code>neg</code> or <script type="math/tex" id="MathJax-Element-140">(u,v)\in\cN</script>).</li>
+<li>at least as large as 1 for any pixel that is marked as a blob centre (<code>pos</code> or $(u,v)\in\cP$) and</li>
+<li>at most zero for any pixel that is marked as being far away from a blob (<code>neg</code> or $(u,v)\in\cN$).</li>
 </ul>
-
-<p>We do so by defining and then optimising the following objective function: <br>
-<script type="math/tex; mode=display" id="MathJax-Element-141">
+<p>We do so by defining and then optimising the following objective function:
+$$
 E(\bw,b) = 
 \frac{\lambda}{2}\|\bw\|^2
 +
 \frac{1}{|\cP|}\sum_{(u,v) \in \cP}
-\max\{0, 1 - f(\bx;\bw,b)_{(u,v)}\}
+\max{0, 1 - f(\bx;\bw,b)<em _cN="\cN" _in="\in" _u_v_="(u,v)">{(u,v)}}
 +
-\frac{1}{|\cN|}\sum_{(u,v) \in \cN}
-\max\{0, f(\bx;\bw,b)_{(u,v)}\}.
-</script></p>
-
+\frac{1}{|\cN|}\sum</em>
+\max{0, f(\bx;\bw,b)_{(u,v)}}.
+$$</p>
 <blockquote>
-  <p><strong>Questions:</strong></p>
-  
-  <ul>
-  <li>What can you say about the score of each pixel if <script type="math/tex" id="MathJax-Element-142">\lambda=0</script> and <script type="math/tex" id="MathJax-Element-143">E(\bw,b) =0</script>?</li>
-  <li>Note that the objective enforces a <em>margin</em> between the scores of the positive and negative pixels. How much is this margin?</li>
-  </ul>
+<p><strong>Questions:</strong></p>
+<ul>
+<li>What can you say about the score of each pixel if $\lambda=0$ and $E(\bw,b) =0$?</li>
+<li>Note that the objective enforces a <em>margin</em> between the scores of the positive and negative pixels. How much is this margin?</li>
+</ul>
 </blockquote>
-
-<p>We can now train the CNN by minimising the objective function with respect to <script type="math/tex" id="MathJax-Element-144">\bw</script> and <script type="math/tex" id="MathJax-Element-145">b</script>. We do so by using an algorithm called <em>gradient descent with momentum</em>.  Given the current solution <script type="math/tex" id="MathJax-Element-146">(\bw_t,b_t)</script> and update it , this is updated to <script type="math/tex" id="MathJax-Element-147">(\bw_{t+1},b_t)</script> by following the direction of fastest descent as given by the negative gradient <script type="math/tex" id="MathJax-Element-148">-\nabla E(\bw_t,b_t)</script> of the objective. However, gradient updates are smoothed by considering a <em>momentum</em> term <script type="math/tex" id="MathJax-Element-149">(\bar\bw_{t}, \bar\mu_t)</script>, yielding the update equations <br>
-<script type="math/tex; mode=display" id="MathJax-Element-150">
+<p>We can now train the CNN by minimising the objective function with respect to $\bw$ and $b$. We do so by using an algorithm called <em>gradient descent with momentum</em>.  Given the current solution $(\bw_t,b_t)$ and update it , this is updated to $(\bw_{t+1},b_t)$ by following the direction of fastest descent as given by the negative gradient $-\nabla E(\bw_t,b_t)$ of the objective. However, gradient updates are smoothed by considering a <em>momentum</em> term $(\bar\bw_{t}, \bar\mu_t)$, yielding the update equations
+$$
  \bar\bw_{t+1} \leftarrow \mu \bar\bw_t + \eta \frac{\partial E}{\partial \bw_t},
  \qquad
  \bw_{t+1} \leftarrow \bw_{t} - \bar\bw_t.
-</script> <br>
-and similarly for the bias term. Here <script type="math/tex" id="MathJax-Element-151">\mu</script> is the <em>momentum rate</em> and <script type="math/tex" id="MathJax-Element-152">\eta</script> the <em>learning rate</em>.</p>
-
+$$
+and similarly for the bias term. Here $\mu$ is the <em>momentum rate</em> and $\eta$ the <em>learning rate</em>.</p>
 <blockquote>
-  <p><strong>Questions:</strong></p>
-  
-  <ul>
-  <li>Explain why the momentum rate must be smaller than 1. What is the effect of having a momentum rate close to 1?</li>
-  <li>The learning rate establishes how fast the algorithm will try to minimise the objective function. Can you see any problem with a large learning rate?</li>
-  </ul>
+<p><strong>Questions:</strong></p>
+<ul>
+<li>Explain why the momentum rate must be smaller than 1. What is the effect of having a momentum rate close to 1?</li>
+<li>The learning rate establishes how fast the algorithm will try to minimise the objective function. Can you see any problem with a large learning rate?</li>
+</ul>
 </blockquote>
-
 <p>The parameters of the algorithm are set as follows:</p>
-
-
-
-<pre class="prettyprint"><code class="language-Malta hljs ini"><span class="hljs-setting">numIterations = <span class="hljs-value"><span class="hljs-number">500</span> ;</span></span>
-<span class="hljs-setting">rate = <span class="hljs-value"><span class="hljs-number">5</span> ;</span></span>
-<span class="hljs-setting">momentum = <span class="hljs-value"><span class="hljs-number">0.9</span> ;</span></span>
-<span class="hljs-setting">shrinkRate = <span class="hljs-value"><span class="hljs-number">0.0001</span> ;</span></span>
-<span class="hljs-setting">plotPeriod = <span class="hljs-value"><span class="hljs-number">10</span> ;</span></span></code></pre>
+<pre><code class="Malta">numIterations = 500 ;
+rate = 5 ;
+momentum = 0.9 ;
+shrinkRate = 0.0001 ;
+plotPeriod = 10 ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Tasks:</strong></p>
-  
-  <ul>
-  <li>Inspect the code in the file  <code>exercise3.m</code>. Convince yourself that the code is implementing the algorithm described above. Pay particular attention at the forward and backward passes as well as at how the objective function and its derivatives are computed.</li>
-  <li>Run the algorithm and observe the results. Then answer the following questions: <br>
-  <ul><li>The learned filter should resemble the discretisation of a well-known differential operator. Which one? </li>
-  <li>What is the average of the filter values compared to the average of the absolute values?</li></ul></li>
-  <li>Run the algorithm again and observe the evolution of the histograms of the score of the positive and negative pixels in relation to the values 0 and 1. Answer the following: <br>
-  <ul><li>Is the objective function minimised monotonically?</li>
-  <li>As the histograms evolve, can you identify at least two “phases” in the optimisation?</li>
-  <li>Once converged, do the score distribute in the manner that you would expect?</li></ul></li>
-  </ul>
-  
-  <p><strong>Hint:</strong> the <code>plotPeriod</code> option can be changed to plot the diagnostic figure with a higher or lower frequency; this can significantly affect the speed of the algorithm.</p>
+<p><strong>Tasks:</strong></p>
+<ul>
+<li>Inspect the code in the file  <code>exercise3.m</code>. Convince yourself that the code is implementing the algorithm described above. Pay particular attention at the forward and backward passes as well as at how the objective function and its derivatives are computed.</li>
+<li>Run the algorithm and observe the results. Then answer the following questions:</li>
+<li>The learned filter should resemble the discretisation of a well-known differential operator. Which one? </li>
+<li>What is the average of the filter values compared to the average of the absolute values?</li>
+<li>Run the algorithm again and observe the evolution of the histograms of the score of the positive and negative pixels in relation to the values 0 and 1. Answer the following:</li>
+<li>Is the objective function minimised monotonically?</li>
+<li>As the histograms evolve, can you identify at least two "phases" in the optimisation?</li>
+<li>Once converged, do the score distribute in the manner that you would expect?</li>
+</ul>
+<p><strong>Hint:</strong> the <code>plotPeriod</code> option can be changed to plot the diagnostic figure with a higher or lower frequency; this can significantly affect the speed of the algorithm.</p>
 </blockquote>
-
-
-
 <h3 id="part-34-experimenting-with-the-tiny-cnn">Part 3.4: experimenting with the tiny CNN</h3>
-
 <p>In this part we will experiment with several variants of the network just learned. First, we study the effect of the image smoothing:</p>
-
 <blockquote>
-  <p><strong>Task:</strong> Train again the tiny CNN <em>without smoothing the input image in preprocessing</em>. Answer the following questions:</p>
-  
-  <ul>
-  <li>Is the learned filter very different from the one learned before?</li>
-  <li>If so, can you figure out what “went wrong”?</li>
-  <li>Look carefully at the output of the first layer, magnifying with the loupe tool. Is the maximal filter response attained in the middle of each blob?</li>
-  </ul>
-  
-  <p><strong>Hint:</strong> The Laplacian of Gaussian operator responds maximally at the centre of a blob only if the latter matches the blob size. Relate this fact to the combination of pre-smoothing the image and applying the learned <script type="math/tex" id="MathJax-Element-153">3\times 3</script> filter.</p>
+<p><strong>Task:</strong> Train again the tiny CNN <em>without smoothing the input image in preprocessing</em>. Answer the following questions:</p>
+<ul>
+<li>Is the learned filter very different from the one learned before?</li>
+<li>If so, can you figure out what "went wrong"?</li>
+<li>Look carefully at the output of the first layer, magnifying with the loupe tool. Is the maximal filter response attained in the middle of each blob?</li>
+</ul>
+<p><strong>Hint:</strong> The Laplacian of Gaussian operator responds maximally at the centre of a blob only if the latter matches the blob size. Relate this fact to the combination of pre-smoothing the image and applying the learned $3\times 3$ filter.</p>
 </blockquote>
-
 <p>Now restore the smoothing but switch off subtracting the median from the input image.</p>
-
 <blockquote>
-  <p><strong>Task:</strong> Train again the tiny CNN <em>without subtracting the median value in preprocessing</em>. Answer the following questions:</p>
-  
-  <ul>
-  <li>Does the algorithm converge?</li>
-  <li>Reduce a hundred-fold the learning are and increase the maximum number of iterations by an equal amount. Does it get better?</li>
-  <li>Explain why adding a constant to the input image can have such a dramatic effect on the performance of the optimisation.</li>
-  </ul>
-  
-  <p><strong>Hint:</strong> What constraint should the filter <script type="math/tex" id="MathJax-Element-154">\bw</script> satisfy if the filter output should be zero when (i) the input image is zero or (ii) the input image is a large constant? Do you think that it would be easy for gradient descent to enforce (ii) at all times?</p>
+<p><strong>Task:</strong> Train again the tiny CNN <em>without subtracting the median value in preprocessing</em>. Answer the following questions:</p>
+<ul>
+<li>Does the algorithm converge?</li>
+<li>Reduce a hundred-fold the learning are and increase the maximum number of iterations by an equal amount. Does it get better?</li>
+<li>Explain why adding a constant to the input image can have such a dramatic effect on the performance of the optimisation.</li>
+</ul>
+<p><strong>Hint:</strong> What constraint should the filter $\bw$ satisfy if the filter output should be zero when (i) the input image is zero or (ii) the input image is a large constant? Do you think that it would be easy for gradient descent to enforce (ii) at all times?</p>
 </blockquote>
-
 <p>What you have just witnessed is actually a fairly general principle: centring the data usually makes learning problems much better conditioned.</p>
-
 <p>Now we will explore several parameters in the algorithms:</p>
-
 <blockquote>
-  <p><strong>Task:</strong> Restore the preprocessing as given in <code>experiment4.m</code>.  Try the following:</p>
-  
-  <ul>
-  <li>Try increasing the learning rate <code>eta</code>. Can you achieve a better value of the energy in the 500 iterations?</li>
-  <li>Disable momentum by setting <code>momentum = 0</code>. Now try to beat the result obtained above by choosing <code>eta</code>. Can you succeed?</li>
-  </ul>
+<p><strong>Task:</strong> Restore the preprocessing as given in <code>experiment4.m</code>.  Try the following:</p>
+<ul>
+<li>Try increasing the learning rate <code>eta</code>. Can you achieve a better value of the energy in the 500 iterations?</li>
+<li>Disable momentum by setting <code>momentum = 0</code>. Now try to beat the result obtained above by choosing <code>eta</code>. Can you succeed?</li>
+</ul>
 </blockquote>
-
 <p>Finally, consider the regularisation effect of shrinking:</p>
-
 <blockquote>
-  <p><strong>Task:</strong> Restore the learning rate and momentum as given in <code>experiment4.m</code>. Then increase the shrinkage factor tenfold and a hundred-fold.</p>
-  
-  <ul>
-  <li>What is the effect on the convergence speed?</li>
-  <li>What is the effect on the final value of the total objective function and of the average loss part of it?</li>
-  </ul>
+<p><strong>Task:</strong> Restore the learning rate and momentum as given in <code>experiment4.m</code>. Then increase the shrinkage factor tenfold and a hundred-fold.</p>
+<ul>
+<li>What is the effect on the convergence speed?</li>
+<li>What is the effect on the final value of the total objective function and of the average loss part of it?</li>
+</ul>
 </blockquote>
-
-
-
 <h2 id="part-4-learning-a-character-cnn">Part 4: learning a character CNN</h2>
-
 <p>In this part we will learn a CNN to recognise images of characters.  </p>
-
-
-
 <h3 id="part-41-prepare-the-data">Part 4.1: prepare the data</h3>
+<p>Open up <code>exercise4.m</code> and execute Part 4.1. The code loads a structure <code>imdb</code> containing images of the characters <em>a, b, ..., z</em> rendered using approximately 931 fonts downloaded from the <a href="https://www.google.com/fonts">Google Fonts Project</a>. Look at the <code>imdb.images</code> substructure:</p>
+<pre><code class="matlab">&gt;&gt; imdb.images
+ans = 
+       id: [1x24206 double]
+     data: [32x32x24206 single]
+    label: [1x24206 double]
+      set: [1x24206 double]
+</code></pre>
 
-<p>Open up <code>exercise4.m</code> and execute Part 4.1. The code loads a structure <code>imdb</code> containing images of the characters <em>a, b, …, z</em> rendered using approximately 931 fonts downloaded from the <a href="https://www.google.com/fonts">Google Fonts Project</a>. Look at the <code>imdb.images</code> substructure:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs ">&gt;&gt; <span class="hljs-transposed_variable">imdb.</span>images
-<span class="hljs-built_in">ans</span> = 
-       id: <span class="hljs-matrix">[<span class="hljs-number">1</span>x24206 double]</span>
-     data: <span class="hljs-matrix">[<span class="hljs-number">32</span>x32x24206 single]</span>
-    label: <span class="hljs-matrix">[<span class="hljs-number">1</span>x24206 double]</span>
-      set: <span class="hljs-matrix">[<span class="hljs-number">1</span>x24206 double]</span></code></pre>
-
-<p>These are stored as the array <code>imdb.images.id</code> is a 24,206-dimensional vector of numeric IDs for each of the 24,206 character images in the dataset. <code>imdb.images.data</code> contains a <script type="math/tex" id="MathJax-Element-155">32 \times 32</script> image for each character, stored as a slide of a <script type="math/tex" id="MathJax-Element-156">32\times 32\times 24,\!206</script>-dimensional array. <code>imdb.images.label</code> is a vector of image labels, denoting which one of the 26 possible characters it is. <code>imdb.images.set</code> is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.</p>
-
-<p><img height="400px" src="images/chars.png" alt="cover"></p>
-
+<p>These are stored as the array <code>imdb.images.id</code> is a 24,206-dimensional vector of numeric IDs for each of the 24,206 character images in the dataset. <code>imdb.images.data</code> contains a $32 \times 32$ image for each character, stored as a slide of a $32\times 32\times 24,!206$-dimensional array. <code>imdb.images.label</code> is a vector of image labels, denoting which one of the 26 possible characters it is. <code>imdb.images.set</code> is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.</p>
+<p><img height=400px src="images/chars.png" alt="cover"/></p>
 <blockquote>
-  <p><strong>Task:</strong> look at the Figure 1 generated by the code and at the code itself and make sure that you understand what you are looking at.</p>
+<p><strong>Task:</strong> look at the Figure 1 generated by the code and at the code itself and make sure that you understand what you are looking at.</p>
 </blockquote>
-
-
-
 <h3 id="part-42-intialize-a-cnn-architecture">Part 4.2: intialize a CNN architecture</h3>
-
 <p>The function <code>initializeCharacterCNN.m</code> creates a CNN initialised with random weights that will be trained to recognise character images.</p>
-
 <blockquote>
-  <p><strong>Tasks:</strong></p>
-  
-  <ol>
-  <li>By inspecting <code>initializeCharacterCNN.m</code> get a sense of the architecture that will be trained. How many layers are there? How big are the filters?</li>
-  <li>Use the function <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_simplenn_display/"><code>vl_simplenn_display</code></a> to produce a table summarising the architecture.</li>
-  </ol>
+<p><strong>Tasks:</strong></p>
+<ol>
+<li>By inspecting <code>initializeCharacterCNN.m</code> get a sense of the architecture that will be trained. How many layers are there? How big are the filters?</li>
+<li>Use the function <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_simplenn_display/"><code>vl_simplenn_display</code></a> to produce a table summarising the architecture.</li>
+</ol>
 </blockquote>
-
 <p>Note that the <em>penultimate</em> layer has 26 output dimensions, one for each character. Character recognition looks at the maximal output to identify which character is processed by the network.</p>
-
-<p>However, the last network layer is <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnsoftmaxloss/"><code>vl_nnsoftmaxloss</code></a>, which in turn is a combination of the <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnsoftmax/"><code>vl_nnsoftmax</code></a> function and of the classification log-loss <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnloss/"><code>vl_nnloss</code></a>. The <em>softmax</em> operator is given by <br>
-<script type="math/tex; mode=display" id="MathJax-Element-157">
+<p>However, the last network layer is <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnsoftmaxloss/"><code>vl_nnsoftmaxloss</code></a>, which in turn is a combination of the <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnsoftmax/"><code>vl_nnsoftmax</code></a> function and of the classification log-loss <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnloss/"><code>vl_nnloss</code></a>. The <em>softmax</em> operator is given by
+$$
   y_{ijk'} = \frac{e^{x_{ijk'}}}{\sum_{k} e^{x_{ijk}}}
-</script> <br>
-whereas the <em>log-loss</em> is given by <br>
-<script type="math/tex; mode=display" id="MathJax-Element-158">
+$$
+whereas the <em>log-loss</em> is given by
+$$
   y_{ij} = - \log x_{ij c_{ij}}
-</script> <br>
-where <script type="math/tex" id="MathJax-Element-159">c_{ij}</script> is the index of the ground-truth class at spatial location <script type="math/tex" id="MathJax-Element-160">(i,j)</script>.</p>
-
-<p><strong>Remark:</strong> While in MatConvNet all operators are convolutional, in this case the network is configured such that the output of the classification layer is a <script type="math/tex" id="MathJax-Element-161">1 \times 1 \times 26</script>-dimensional feature map, i.e. there remains only one spatial location.</p>
-
+$$
+where $c_{ij}$ is the index of the ground-truth class at spatial location $(i,j)$.</p>
+<p><strong>Remark:</strong> While in MatConvNet all operators are convolutional, in this case the network is configured such that the output of the classification layer is a $1 \times 1 \times 26$-dimensional feature map, i.e. there remains only one spatial location.</p>
 <blockquote>
-  <p><strong>Tasks:</strong></p>
-  
-  <ol>
-  <li>Understand what the softmax operator does. <strong>Hint:</strong> to use the log-loss the data must be in the (0, 1] interval.</li>
-  <li>Understand what is the effect of minimising the log-loss. Which neural response should become larger?</li>
-  <li>Why do you think MatConvNet provides a third function <code>vl_nnsoftmaxloss</code> combining both functions into a single layer?</li>
-  </ol>
+<p><strong>Tasks:</strong></p>
+<ol>
+<li>Understand what the softmax operator does. <strong>Hint:</strong> to use the log-loss the data must be in the (0, 1] interval.</li>
+<li>Understand what is the effect of minimising the log-loss. Which neural response should become larger?</li>
+<li>Why do you think MatConvNet provides a third function <code>vl_nnsoftmaxloss</code> combining both functions into a single layer?</li>
+</ol>
 </blockquote>
-
-
-
 <h3 id="part-43-train-and-evaluate-the-cnn">Part 4.3: train and evaluate the CNN</h3>
-
 <p>We are now ready to train the CNN. To this end we use the example SGD implementation in MatConvNet (<code>examples/cnn_train.m</code>). This function requires some options:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-transposed_variable">trainOpts.</span>batchSize = <span class="hljs-number">100</span> ;
-<span class="hljs-transposed_variable">trainOpts.</span>numEpochs = <span class="hljs-number">100</span> ;
-<span class="hljs-transposed_variable">trainOpts.</span><span class="hljs-keyword">continue</span> = true ;
-<span class="hljs-transposed_variable">trainOpts.</span>useGpu = false ;
-<span class="hljs-transposed_variable">trainOpts.</span>learningRate = <span class="hljs-number">0.001</span> ;
-<span class="hljs-transposed_variable">trainOpts.</span>numEpochs = <span class="hljs-number">15</span> ;
-<span class="hljs-transposed_variable">trainOpts.</span>expDir = <span class="hljs-string">'data/chars-experiment'</span> ;</code></pre>
+<pre><code class="matlab">trainOpts.batchSize = 100 ;
+trainOpts.numEpochs = 100 ;
+trainOpts.continue = true ;
+trainOpts.useGpu = false ;
+trainOpts.learningRate = 0.001 ;
+trainOpts.numEpochs = 15 ;
+trainOpts.expDir = 'data/chars-experiment' ;
+</code></pre>
 
 <p>This says that the function will operate on SGD mini-batches of 100 elements,  it will run for 15 epochs (passes through the data),  it will continue from the last epoch if interrupted, if will <em>not</em> use the GPU, it will use a learning rate of 0.001, and it will save any file in the <code>data/chars-experiment</code> subdirectory.</p>
-
 <p>Before the training starts, the average image value is subtracted:</p>
-
-
-
-<pre class="prettyprint"><code class=" hljs avrasm">% Take the average image <span class="hljs-keyword">out</span>
-imageMean = mean(imdb<span class="hljs-preprocessor">.images</span><span class="hljs-preprocessor">.data</span>(:)) <span class="hljs-comment">;</span>
-imdb<span class="hljs-preprocessor">.images</span><span class="hljs-preprocessor">.data</span> = imdb<span class="hljs-preprocessor">.images</span><span class="hljs-preprocessor">.data</span> - imageMean <span class="hljs-comment">;</span></code></pre>
+<pre><code>% Take the average image out
+imageMean = mean(imdb.images.data(:)) ;
+imdb.images.data = imdb.images.data - imageMean ;
+</code></pre>
 
 <p>This is similar to what we have done in Part 3.</p>
-
 <p>The training code is called as follows:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Call training function in MatConvNet</span>
-<span class="hljs-matrix">[net,info]</span> = cnn_train(net, imdb, @getBatch, trainOpts) ;</code></pre>
+<pre><code class="matlab">% Call training function in MatConvNet
+[net,info] = cnn_train(net, imdb, @getBatch, trainOpts) ;
+</code></pre>
 
 <p>Here the key, in addition to the <code>trainOpts</code> structure, is the <code>@getBatch</code> function handle. This is how <code>cnn_train</code> obtains a copy of the data to operate on. Examine this function (see the bottom of the <code>exercise4.m</code> file):</p>
+<pre><code class="matlab">function [im, labels] = getBatch(imdb, batch)
+im = imdb.images.data(:,:,batch) ;
+im = 256 * reshape(im, 32, 32, 1, []) ;
+labels = imdb.images.label(1,batch) ;
+</code></pre>
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">[im, labels]</span> = <span class="hljs-title">getBatch</span><span class="hljs-params">(imdb, batch)</span></span>
-im = <span class="hljs-transposed_variable">imdb.</span><span class="hljs-transposed_variable">images.</span>data(:,:,batch) ;
-im = <span class="hljs-number">256</span> * <span class="hljs-built_in">reshape</span>(im, <span class="hljs-number">32</span>, <span class="hljs-number">32</span>, <span class="hljs-number">1</span>, <span class="hljs-matrix">[]</span>) ;
-labels = <span class="hljs-transposed_variable">imdb.</span><span class="hljs-transposed_variable">images.</span>label(<span class="hljs-number">1</span>,batch) ;</code></pre>
-
-<p>The function extracts the <script type="math/tex" id="MathJax-Element-162">m</script> images corresponding to the vector of indexes <code>batch</code>. It also reshape them as a <script type="math/tex" id="MathJax-Element-163">32\times 32\times 1\times m</script> array (as this is the format expected by the MatConvNet functions) and multiplies the values by 256 (the resulting values match the network initialisation and learning parameters). Finally, it also returns a vector of labels, one for each image in the batch.</p>
-
+<p>The function extracts the $m$ images corresponding to the vector of indexes <code>batch</code>. It also reshape them as a $32\times 32\times 1\times m$ array (as this is the format expected by the MatConvNet functions) and multiplies the values by 256 (the resulting values match the network initialisation and learning parameters). Finally, it also returns a vector of labels, one for each image in the batch.</p>
 <blockquote>
-  <p><strong>Task:</strong> Run the learning code and examine the plots that are produced. As training completes answer the following questions:</p>
-  
-  <ol>
-  <li>How many images per second can you process? (Look at the output in the MATLAB screen)</li>
-  <li>There are two sets of curves: energy and prediction error. What do you think is the difference? What is the “energy”?</li>
-  <li>Some curves are labelled “train” and some other “val”.  Should they be equal? Which one should be lower than the other?</li>
-  <li>Both the top-1 and top-5 prediction errors are plotted. What do they mean? What is the difference?</li>
-  </ol>
+<p><strong>Task:</strong> Run the learning code and examine the plots that are produced. As training completes answer the following questions:</p>
+<ol>
+<li>How many images per second can you process? (Look at the output in the MATLAB screen)</li>
+<li>There are two sets of curves: energy and prediction error. What do you think is the difference? What is the "energy"?</li>
+<li>Some curves are labelled "train" and some other "val".  Should they be equal? Which one should be lower than the other?</li>
+<li>Both the top-1 and top-5 prediction errors are plotted. What do they mean? What is the difference?</li>
+</ol>
 </blockquote>
-
 <p>Once training is finished, the model is saved back:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Save the result for later use</span>
-<span class="hljs-transposed_variable">net.</span>layers(<span class="hljs-keyword">end</span>) = <span class="hljs-matrix">[]</span> ;
-<span class="hljs-transposed_variable">net.</span>imageMean = imageMean ;
-save(<span class="hljs-string">'data/chars-experiment/charscnn.mat'</span>, <span class="hljs-string">'-struct'</span>, <span class="hljs-string">'net'</span>) ;</code></pre>
+<pre><code class="matlab">% Save the result for later use
+net.layers(end) = [] ;
+net.imageMean = imageMean ;
+save('data/chars-experiment/charscnn.mat', '-struct', 'net') ;
+</code></pre>
 
 <p>Note that we remember the <code>imageMean</code> for later use. Note also that the softmaxloss layer is <em>removed</em> from the network before saving.</p>
-
-
-
 <h3 id="part-44-visualise-the-learned-filters">Part 4.4: visualise the learned filters</h3>
-
 <p>The next step is to glance at the filters that have been learned:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs ">figure(<span class="hljs-number">2</span>) ; clf ; colormap gray ;
-vl_imarraysc(<span class="hljs-built_in">squeeze</span>(<span class="hljs-transposed_variable">net.</span>layers<span class="hljs-cell">{<span class="hljs-number">1</span>}.</span>filters),<span class="hljs-string">'spacing'</span>,<span class="hljs-number">2</span>)
+<pre><code class="matlab">figure(2) ; clf ; colormap gray ;
+vl_imarraysc(squeeze(net.layers{1}.weights{1}),'spacing',2)
 axis equal ;
-title(<span class="hljs-string">'filters in the first layer'</span>) ;</code></pre>
+title('filters in the first layer') ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Task:</strong> what can you say about the filters?</p>
+<p><strong>Task:</strong> what can you say about the filters?</p>
 </blockquote>
-
-
-
 <h3 id="part-45-apply-the-model">Part 4.5: apply the model</h3>
-
 <p>We now apply the model to a whole sequence of characters. This is the image <code>data/sentence-lato.png</code>:</p>
+<p><img width=576px src="images/sentence-lato.png" alt="sentence-lato"/></p>
+<pre><code class="matlab">% Load the CNN learned before
+net = load('data/chars-experiment/charscnn.mat') ;
 
-<p><img width="576px" src="images/sentence-lato.png" alt="sentence-lato"></p>
+% Load the sentence
+im = im2single(imread('data/sentence-lato.png')) ;
+im = 256 * (im - net.imageMean) ;
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Load the CNN learned before</span>
-net = load(<span class="hljs-string">'data/chars-experiment/charscnn.mat'</span>) ;
-
-<span class="hljs-comment">% Load the sentence</span>
-im = im2single(imread(<span class="hljs-string">'data/sentence-lato.png'</span>)) ;
-im = <span class="hljs-number">256</span> * (im - <span class="hljs-transposed_variable">net.</span>imageMean) ;
-
-<span class="hljs-comment">% Apply the CNN to the larger image</span>
-res = vl_simplenn(net, im) ;</code></pre>
+% Apply the CNN to the larger image
+res = vl_simplenn(net, im) ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Question:</strong> The image is much wider than 32 pixels. Why can you apply to it the CNN learned before for <script type="math/tex" id="MathJax-Element-164">32\times 32</script> patches?</p>
-  
-  <p><strong>Task:</strong> examine the size of the CNN output using <code>size(res(end).x)</code>. Does this match your expectation?</p>
+<p><strong>Question:</strong> The image is much wider than 32 pixels. Why can you apply to it the CNN learned before for $32\times 32$ patches?</p>
+<p><strong>Task:</strong> examine the size of the CNN output using <code>size(res(end).x)</code>. Does this match your expectation?</p>
 </blockquote>
-
 <p>Now use the <code>decodeCharacters()</code>  function to visualise the results:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% Visualize the results</span>
-figure(<span class="hljs-number">3</span>) ; clf ;
-decodeCharacters(net, imdb, im, res) ;</code></pre>
+<pre><code class="matlab">% Visualize the results
+figure(3) ; clf ;
+decodeCharacters(net, imdb, im, res) ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Tasks:</strong> inspect the output of the <code>decodeCharacters()</code> function and answer the following:</p>
-  
-  <ol>
-  <li>Is the quality of the recognition any good?</li>
-  <li>Does this match your expectation given the recognition rate in your validation set (as reported by <code>cnn_train</code> during training)?</li>
-  </ol>
+<p><strong>Tasks:</strong> inspect the output of the <code>decodeCharacters()</code> function and answer the following:</p>
+<ol>
+<li>Is the quality of the recognition any good?</li>
+<li>Does this match your expectation given the recognition rate in your validation set (as reported by <code>cnn_train</code> during training)?</li>
+</ol>
 </blockquote>
-
-
-
 <h3 id="part-46-training-with-jitter">Part 4.6: training with jitter</h3>
-
-<p>A key issue with the previous CNN is that it is not trained to recognise characters in the context of other characters. Furthermore, characters are perfectly centred in the patch. We can relax these assumptions by making the training data “more realistic”. In this part we will train a second network applying <em>data jittering</em> by:</p>
-
+<p>A key issue with the previous CNN is that it is not trained to recognise characters in the context of other characters. Furthermore, characters are perfectly centred in the patch. We can relax these assumptions by making the training data "more realistic". In this part we will train a second network applying <em>data jittering</em> by:</p>
 <ol>
 <li>Randomly adding a character to the left and to the right of the one recognised and</li>
-<li>Randomly shifting the characters by up to <script type="math/tex" id="MathJax-Element-165">\pm 5</script> pixels horizontally and <script type="math/tex" id="MathJax-Element-166">\pm 2</script> pixels vertically.</li>
+<li>Randomly shifting the characters by up to $\pm 5$ pixels horizontally and $\pm 2$ pixels vertically.</li>
 </ol>
-
 <p>This is implemented by the <code>getBatchWithJitter()</code>  function (note that jittering is applied on the fly as it is so fast).</p>
-
 <blockquote>
-  <p><strong>Tasks:</strong></p>
-  
-  <ol>
-  <li>Train a second model, using the jittered data.</li>
-  <li>Look at the training and validation errors. Is their gap as wide as it was before?</li>
-  <li>Use the new model to recognise the characters in the sentence by repeating the previous part. Does it work better?</li>
-  <li><strong>Advanced.</strong> What else can you change to make the performance even better?</li>
-  </ol>
+<p><strong>Tasks:</strong></p>
+<ol>
+<li>Train a second model, using the jittered data.</li>
+<li>Look at the training and validation errors. Is their gap as wide as it was before?</li>
+<li>Use the new model to recognise the characters in the sentence by repeating the previous part. Does it work better?</li>
+<li><strong>Advanced.</strong> What else can you change to make the performance even better?</li>
+</ol>
 </blockquote>
-
-
-
 <h3 id="part-47-training-using-the-gpu">Part 4.7: Training using the GPU</h3>
-
 <blockquote>
-  <p>Skip this part if you do not wish to experiment training using GPU hardware.</p>
+<p>Skip this part if you do not wish to experiment training using GPU hardware.</p>
 </blockquote>
-
 <p>A key challenge in deep learning is the sheer amount of computation required to train gigantic models from equally gigantic data collections. State-of-the-art vision models, for example, take weeks to train on specialised hardware such as GPUs, and they are essentially untrainable on CPU (unless you have access to a very large cluster). Thus it is practically important to learn how to use this hardware.</p>
-
 <p>In MatConvNet this is almost trivial as it builds on the easy-to-use GPU support in MATLAB. You can follow this list of steps to try it out:</p>
-
 <ol>
 <li>Clear the models generated and cached in the previous steps. To do this, rename or delete the directories <code>data/characters-experiment</code> and <code>data/characters-jit-experiment</code>.</li>
-<li>Make sure that MatConvNet is compiled with GPU support. To do this, use <br>
-<code> <br>
-&gt; setup('useGpu', true) ; <br>
-</code></li>
+<li>Make sure that MatConvNet is compiled with GPU support. To do this, use
+    <code>&gt; setup('useGpu', true) ;</code></li>
 <li>Try again training the model of <code>exercise4.m</code> switching to <code>true</code> the <code>useGpu</code> flag.</li>
 </ol>
-
 <blockquote>
-  <p><strong>Task:</strong> Follow the steps above and note the speed of training. How many images per second can you process now?</p>
+<p><strong>Task:</strong> Follow the steps above and note the speed of training. How many images per second can you process now?</p>
 </blockquote>
-
 <p>For these small images, the GPU speedup is probably modest (perhaps 2-5 fold). However, for larger models it becomes really dramatic (&gt;10 fold).</p>
-
-
-
 <h2 id="part-5-using-pretrained-models">Part 5: using pretrained models</h2>
-
 <p>A characteristic of deep learning is that it constructs <em>representations</em> of the data. These representations tend to have a universal value, or at least to be applicable to an array of problems that transcends the particular task a model was trained for. This is fortunate as training complex models requires weeks of works on one or more GPUs or hundreds of CPUs; these models can then be frozen and reused for a number of additional applications, with no or minimal additional work.</p>
-
 <p>In this part we will see how MatConvNet can be used to download and run high-performance CNN models for image classification. These models are trained from 1.2M images in the ImageNet datasets to discriminate 1,000 different object categories.</p>
-
 <p>Several <a href="http://www.vlfeat.org/matconvnet/pretrained/">pertained models</a> can be downloaded from the MatConvNet website, including several trained using other CNN implementations such as Caffe. One such models is included in the practical <code>data/imagenet-vgg-verydeep-16.mat</code> file. This is one of the best models from the ImageNet ILSVCR Challenge 2014.</p>
-
-
-
 <h3 id="part-51-load-a-pre-trained-model">Part 5.1:  load a pre-trained model</h3>
-
 <p>The first step is to load the model itself. This is in the format of the <code>vl_simplenn</code> CNN wrapper, and ships as a MATLAB <code>.mat</code> file:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs ">net = load(<span class="hljs-string">'data/imagenet-vgg-verydeep-16.mat'</span>) ;
-vl_simplenn_display(net) ;</code></pre>
+<pre><code class="matlab">net = load('data/imagenet-vgg-verydeep-16.mat') ;
+vl_simplenn_display(net) ;
+</code></pre>
 
 <blockquote>
-  <p><strong>Tasks:</strong></p>
-  
-  <ol>
-  <li>Look at the output of <code>vl_simplenn_display</code> and understand the structure of the model. Can you understand why it is called “very deep”?</li>
-  <li>Look at the size of the file <code>data/imagenet-vgg-verydeep-16.mat</code> on disk. This is <em>just the model</em>.</li>
-  </ol>
+<p><strong>Tasks:</strong></p>
+<ol>
+<li>Look at the output of <code>vl_simplenn_display</code> and understand the structure of the model. Can you understand why it is called "very deep"?</li>
+<li>Look at the size of the file <code>data/imagenet-vgg-verydeep-16.mat</code> on disk. This is <em>just the model</em>.</li>
+</ol>
 </blockquote>
-
-
-
 <h3 id="part-52-use-the-model-to-classify-an-image">Part 5.2: use the model to classify an image</h3>
-
 <p>We can now use the model to classify an image. We start from <code>peppers.png</code>, a MATLAB stock image:</p>
+<pre><code class="matlab">% obtain and preprocess an image
+im = imread('peppers.png') ;
+im_ = single(im) ; % note: 255 range
+im_ = imresize(im_, net.normalization.imageSize(1:2)) ;
+im_ = im_ - net.normalization.averageImage ;
+</code></pre>
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% obtain and preprocess an image</span>
-im = imread(<span class="hljs-string">'peppers.png'</span>) ;
-im_ = single(im) ; <span class="hljs-comment">% note: 255 range</span>
-im_ = imresize(im_, <span class="hljs-transposed_variable">net.</span><span class="hljs-transposed_variable">normalization.</span>imageSize(<span class="hljs-number">1</span>:<span class="hljs-number">2</span>)) ;
-im_ = im_ - <span class="hljs-transposed_variable">net.</span><span class="hljs-transposed_variable">normalization.</span>averageImage ;</code></pre>
-
-<p>The code normalises the image in a format compatible with the model <code>net</code>. This amounts to: converting the image to <code>single</code> format (but with range 0,…,255 rather than [0, 1] as typical in MATLAB), resizing the image to a fixed size, and then subtracting an average image.</p>
-
+<p>The code normalises the image in a format compatible with the model <code>net</code>. This amounts to: converting the image to <code>single</code> format (but with range 0,...,255 rather than [0, 1] as typical in MATLAB), resizing the image to a fixed size, and then subtracting an average image.</p>
 <p>It is now possible to call the CNN:</p>
-
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% run the CNN</span>
-res = vl_simplenn(net, im_) ;</code></pre>
+<pre><code class="matlab">% run the CNN
+res = vl_simplenn(net, im_) ;
+</code></pre>
 
 <p>As usual, <code>res</code> contains the results of the computation, including all intermediate layers. The last one can be used to perform the classification:</p>
+<pre><code class="matlab">% show the classification result
+scores = squeeze(gather(res(end).x)) ;
+[bestScore, best] = max(scores) ;
 
-
-
-<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-comment">% show the classification result</span>
-scores = <span class="hljs-built_in">squeeze</span>(gather(res(<span class="hljs-keyword">end</span>).x)) ;
-<span class="hljs-matrix">[bestScore, best]</span> = max(scores) ;
-
-figure(<span class="hljs-number">1</span>) ; clf ; imagesc(im) ;
-title(sprintf(<span class="hljs-string">'%s (%d), score %.3f'</span>,...
-  <span class="hljs-transposed_variable">net.</span><span class="hljs-transposed_variable">classes.</span>description<span class="hljs-cell">{best}</span>, best, bestScore)) ;</code></pre>
+figure(1) ; clf ; imagesc(im) ;
+title(sprintf('%s (%d), score %.3f',...
+  net.classes.description{best}, best, bestScore)) ;
+</code></pre>
 
 <p>That completes this practical.</p>
-
-
-
 <h2 id="links-and-further-work">Links and further work</h2>
-
 <ul>
 <li>The code for this practical is written using the software package <a href="http://www.vlfeat.org/matconvnet">MatConvNet</a>. This is a software library written in MATLAB, C++, and CUDA and is freely available as source code and binary.</li>
 <li>The ImageNet model is the <em>VGG very deep 16</em> of Karen Simonyan and Andrew Zisserman.</li>
 </ul>
-
-
-
 <h2 id="acknowledgements">Acknowledgements</h2>
-
 <ul>
 <li>Beta testing by: Karel Lenc and Carlos Arteta.</li>
 <li>Bugfixes/typos by: Sun Yushi.</li>
 </ul>
-
-
-
 <h2 id="history">History</h2>
-
 <ul>
+<li>Used in the Oxford AIMS CDT, 2015-16.</li>
 <li>Used in the Oxford AIMS CDT, 2014-15.</li>
 </ul>
-
-<div class="footnotes"><hr><ol><li id="fn:lattice">A two-dimensional <em>lattice</em> is a discrete grid embedded in <script type="math/tex" id="MathJax-Element-167">R^2</script>, similar for example to a checkerboard. <a href="#fnref:lattice" title="Return to article" class="reversefootnote">↩</a></li></ol></div></div></body>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:lattice">
+<p>A two-dimensional <em>lattice</em> is a discrete grid embedded in $R^2$, similar for example to a checkerboard.&#160;<a class="footnote-backref" href="#fnref:lattice" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div></body>
 </html>

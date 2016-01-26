@@ -1,7 +1,4 @@
-data/practical-cnn-2015a
-data/practical-cnn-2015a-code-only.tar.gz
-data/practical-cnn-2015a-data-only.tar.gz
-data/practical-cnn-2015a.tar.gz
+data/practical-cnn-*
 extra/fonts*
 data/chars-*experiment*
 charsdb.mat
@@ -10,5 +7,4 @@ imagenet-vgg-verydeep-16.mat
 sentence-lato.png
 data/vlfeat*
 vlfeat/
-matconvnet/
 data/matconvnet*

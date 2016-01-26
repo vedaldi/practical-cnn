@@ -1,0 +1,6 @@
+[submodule "matconvnet"]
+	path = matconvnet
+	url = git@github.com:vlfeat/matconvnet.git
+[submodule "extra/practical"]
+	path = extra/practical
+	url = git@github.com:vedaldi/practical.git

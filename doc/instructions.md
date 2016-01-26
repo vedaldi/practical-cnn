@@ -55,6 +55,7 @@ $$
  \qquad \bx \mapsto \by.
 $$
 Open the `example1.m` file, select the following part of the code, and execute it in MATLAB (right button > `Evaluate selection` or `Shift+F7`).
+
 ```matlab
 % Read an example image
 x = imread('peppers.png') ;
@@ -65,6 +66,7 @@ x = im2single(x) ;
 % Visualize the input x
 figure(1) ; clf ; imagesc(x) 
 ```
+
 This should display an image of bell peppers in Figure 1:
 
 <img height=400px src="images/peppers.png" alt="peppers"/>
@@ -74,15 +76,19 @@ Use MATLAB `size` command to obtain the size of the array `x`. Note that the arr
 > **Question.** The third dimension of `x` is 3. Why?
 
 Now we will create a bank 10 of $5 \times 5 \times 3$ filters.
+
 ```matlab
 % Create a bank of linear filters
 w = randn(5,5,3,10,'single') ;
 ```
+
 The filters are in single precision as well. Note that `w` has four dimensions, packing 10 filters. Note also that each filter is not flat, but rather a volume with three layers. The next step is applying the filter to the image. This uses the `vl_nnconv` function from MatConvNet:
+
 ```matlab
 % Apply the convolution operator
 y = vl_nnconv(x, w, []) ;
 ```
+
 **Remark:** You might have noticed that the third argument to the `vl_nnconv` function is the empty matrix `[]`. It can be otherwise used to pass a vector of bias terms to add to the output of each filter.
 
 The variable `y` contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map $\bx$ with $K$ channels. Furthermore, there are $K'$ such filters, generating a $K'$ dimensional map $\by$ as follows
@@ -141,13 +147,13 @@ imagesc(-abs(y_lap)) ; title('- abs(filter output)') ;
 > * How are the RGB colour channels processed by this filter?
 > * What image structure are detected?
 
-### Part 1.2: non-linear gating {#part1.2}
+### Part 1.2: non-linear activation functions {#part1.2}
 
 As we stated in the introduction, CNNs are obtained by composing several different functions. In addition to the linear filters shown in the [previous part](#part1.1), there are several non-linear operators as well.
 
 > **Question:** Some of the functions in a CNN *must* be non-linear. Why?
 
-The simplest non-linearity is obtained by following a linear filter by a *non-linear gating function*, applied identically to each component (i.e. point-wise) of a feature map. The simplest such function is the *Rectified Linear Unit (ReLU)*
+The simplest non-linearity is obtained by following a linear filter by a *non-linear activation function*, applied identically to each component (i.e. point-wise) of a feature map. The simplest such function is the *Rectified Linear Unit (ReLU)*
 $$
   y_{ijk} = \max\{0, x_{ijk}\}.
 $$
@@ -305,6 +311,7 @@ $$
  z
 $$
 where *$z$ is assumed to be a scalar*. Then each computation block (for example `vl_nnconv` or `vl_nnpool`) can compute $\partial z / \partial \bx$ and $\partial z / \partial \bw$ given as input $\bx$ and $\partial z / \partial \by$. Let's put this into practice:
+
 ```matlab
 % Read an example image
 x = im2single(imread('peppers.png')) ;
@@ -322,6 +329,7 @@ dzdy = randn(size(y), 'single') ;
 > **Task:** Run the code above and check the dimensions of `dzdx` and `dzdy`. Does this matches your expectations?
 
 An advantage of this modular view is that new building blocks can be coded and added to the architecture in a simple manner. However, it is easy to make mistakes in the calculation of complex derivatives. Hence, it is a good idea to verify results numerically. Consider the following piece of code:
+
 ```matlab
 % Check the derivative numerically
 ex = randn(size(x), 'single') ;
@@ -349,6 +357,7 @@ fprintf(...
 > * Create a new version of this code to test the derivative calculation with respect to $\bw$.
 
 We are now ready to build our first elementary CNN, composed of just two layers, and to compute its derivatives:
+
 ```matlab
 % Parameters of the CNN
 w1 = randn(5,5,3,10,'single') ;
@@ -366,6 +375,7 @@ dzdx3 = randn(size(x3), 'single') ;
 dzdx2 = vl_nnpool(x2, rho2, dzdx3) ;
 [dzdx1, dzdw1] = vl_nnconv(x1, w1, [], dzdx2) ;
 ```
+
 > **Question:** Note that the last derivative in the CNN is `dzdx3`. Here, for the sake of the example, this derivative is initialised randomly. In a practical application, what would this derivative represent?
 
 We can now use the same technique as before to check that the derivative computed through back-propagation are correct.
@@ -409,6 +419,7 @@ In the rest of the section we will learn the CNN parameters in order to extract 
 ### Part 3.1: training data and labels
 
 The first step is to load the image `data/dots.jpg` and to use the supplied `extractBlackBlobs` function to extract all the black dots in the image.
+
 ```matlab
 % Load an image
 im = rgb2gray(im2single(imread('data/dots.jpg'))) ;
@@ -416,7 +427,9 @@ im = rgb2gray(im2single(imread('data/dots.jpg'))) ;
 % Compute the location of black blobs in the image
 [pos,neg] = extractBlackBlobs(im) ;
 ```
+
 The arrays `pos` and `neg` contain now pixel labels and  will be used as *annotations* for the supervised training of the CNN. These annotations can be visualised as follows:
+
 ```matlab
 figure(1) ; clf ; 
 subplot(1,3,1) ; imagesc(im) ; axis equal ; title('image') ;
@@ -435,6 +448,7 @@ colormap gray ;
 ### Part 3.2: image preprocessing
 
 Before we attempt to train the CNN, the image is pre-processed to remove its mean value. It is also smoothed by applying a Gaussian kernel of standard deviation 3 pixels:
+
 ```matlab
 % Pre-smooth the image
 im = vl_imsmooth(im,3) ;
@@ -442,6 +456,7 @@ im = vl_imsmooth(im,3) ;
 % Subtract median value
 im = im - median(im(:)) ;
 ```
+
 We will come back to this preprocessing steps later.
 
 ### Part 3.3: learning with gradient descent
@@ -482,7 +497,8 @@ and similarly for the bias term. Here $\mu$ is the *momentum rate* and $\eta$ th
 > - The learning rate establishes how fast the algorithm will try to minimise the objective function. Can you see any problem with a large learning rate?
 
 The parameters of the algorithm are set as follows:
-```Malta
+
+```matlab
 numIterations = 500 ;
 rate = 5 ;
 momentum = 0.9 ;
@@ -548,6 +564,7 @@ In this part we will learn a CNN to recognise images of characters.
 ### Part 4.1: prepare the data
 
 Open up `exercise4.m` and execute Part 4.1. The code loads a structure `imdb` containing images of the characters *a, b, ..., z* rendered using approximately 931 fonts downloaded from the [Google Fonts Project](https://www.google.com/fonts). Look at the `imdb.images` substructure:
+
 ```matlab
 >> imdb.images
 ans = 
@@ -556,6 +573,7 @@ ans =
     label: [1x24206 double]
       set: [1x24206 double]
 ```
+
 These are stored as the array `imdb.images.id` is a 24,206-dimensional vector of numeric IDs for each of the 24,206 character images in the dataset. `imdb.images.data` contains a $32 \times 32$ image for each character, stored as a slide of a $32\times 32\times 24,\!206$-dimensional array. `imdb.images.label` is a vector of image labels, denoting which one of the 26 possible characters it is. `imdb.images.set` is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.
 
 <img height=400px src="images/chars.png" alt="cover"/>
@@ -594,6 +612,7 @@ where $c_{ij}$ is the index of the ground-truth class at spatial location $(i,j)
 ### Part 4.3: train and evaluate the CNN
 
 We are now ready to train the CNN. To this end we use the example SGD implementation in MatConvNet (`examples/cnn_train.m`). This function requires some options:
+
 ```matlab
 trainOpts.batchSize = 100 ;
 trainOpts.numEpochs = 100 ;
@@ -603,28 +622,35 @@ trainOpts.learningRate = 0.001 ;
 trainOpts.numEpochs = 15 ;
 trainOpts.expDir = 'data/chars-experiment' ;
 ```
+
 This says that the function will operate on SGD mini-batches of 100 elements,  it will run for 15 epochs (passes through the data),  it will continue from the last epoch if interrupted, if will *not* use the GPU, it will use a learning rate of 0.001, and it will save any file in the `data/chars-experiment` subdirectory.
 
 Before the training starts, the average image value is subtracted:
+
 ```
 % Take the average image out
 imageMean = mean(imdb.images.data(:)) ;
 imdb.images.data = imdb.images.data - imageMean ;
 ```
+
 This is similar to what we have done in Part 3.
 
 The training code is called as follows:
+
 ```matlab
 % Call training function in MatConvNet
 [net,info] = cnn_train(net, imdb, @getBatch, trainOpts) ;
 ```
+
 Here the key, in addition to the `trainOpts` structure, is the `@getBatch` function handle. This is how `cnn_train` obtains a copy of the data to operate on. Examine this function (see the bottom of the `exercise4.m` file):
+
 ```matlab
 function [im, labels] = getBatch(imdb, batch)
 im = imdb.images.data(:,:,batch) ;
 im = 256 * reshape(im, 32, 32, 1, []) ;
 labels = imdb.images.label(1,batch) ;
 ```
+
 The function extracts the $m$ images corresponding to the vector of indexes `batch`. It also reshape them as a $32\times 32\times 1\times m$ array (as this is the format expected by the MatConvNet functions) and multiplies the values by 256 (the resulting values match the network initialisation and learning parameters). Finally, it also returns a vector of labels, one for each image in the batch.
 
 > **Task:** Run the learning code and examine the plots that are produced. As training completes answer the following questions:
@@ -635,12 +661,14 @@ The function extracts the $m$ images corresponding to the vector of indexes `bat
 > 4.  Both the top-1 and top-5 prediction errors are plotted. What do they mean? What is the difference?
 
 Once training is finished, the model is saved back:
+
 ```matlab
 % Save the result for later use
 net.layers(end) = [] ;
 net.imageMean = imageMean ;
 save('data/chars-experiment/charscnn.mat', '-struct', 'net') ;
 ```
+
 Note that we remember the `imageMean` for later use. Note also that the softmaxloss layer is *removed* from the network before saving.
 
 
@@ -653,6 +681,7 @@ vl_imarraysc(squeeze(net.layers{1}.weights{1}),'spacing',2)
 axis equal ;
 title('filters in the first layer') ;
 ```
+
 > **Task:** what can you say about the filters?
 
 ### Part 4.5: apply the model
@@ -716,9 +745,11 @@ In MatConvNet this is almost trivial as it builds on the easy-to-use GPU support
 
 1. Clear the models generated and cached in the previous steps. To do this, rename or delete the directories `data/characters-experiment` and `data/characters-jit-experiment`.
 2. Make sure that MatConvNet is compiled with GPU support. To do this, use
-    ````
+
+    ```matlab
     > setup('useGpu', true) ;
-    ````
+    ```
+    
 3. Try again training the model of `exercise4.m` switching to `true` the `useGpu` flag.
 
 > **Task:** Follow the steps above and note the speed of training. How many images per second can you process now?
@@ -736,6 +767,7 @@ Several [pertained models](http://www.vlfeat.org/matconvnet/pretrained/) can be 
 ### Part 5.1:  load a pre-trained model
 
 The first step is to load the model itself. This is in the format of the `vl_simplenn` CNN wrapper, and ships as a MATLAB `.mat` file:
+
 ```matlab
 net = load('data/imagenet-vgg-verydeep-16.mat') ;
 vl_simplenn_display(net) ;
@@ -749,6 +781,7 @@ vl_simplenn_display(net) ;
 ### Part 5.2: use the model to classify an image
 
 We can now use the model to classify an image. We start from `peppers.png`, a MATLAB stock image:
+
 ```matlab
 % obtain and preprocess an image
 im = imread('peppers.png') ;
@@ -756,14 +789,18 @@ im_ = single(im) ; % note: 255 range
 im_ = imresize(im_, net.normalization.imageSize(1:2)) ;
 im_ = im_ - net.normalization.averageImage ;
 ```
+
 The code normalises the image in a format compatible with the model `net`. This amounts to: converting the image to `single` format (but with range 0,...,255 rather than [0, 1] as typical in MATLAB), resizing the image to a fixed size, and then subtracting an average image.
 
 It is now possible to call the CNN:
+
 ```matlab
 % run the CNN
 res = vl_simplenn(net, im_) ;
 ```
+
 As usual, `res` contains the results of the computation, including all intermediate layers. The last one can be used to perform the classification:
+
 ``` matlab
 % show the classification result
 scores = squeeze(gather(res(end).x)) ;
@@ -773,6 +810,7 @@ figure(1) ; clf ; imagesc(im) ;
 title(sprintf('%s (%d), score %.3f',...
   net.classes.description{best}, best, bestScore)) ;
 ```
+
 That completes this practical.
 
 ## Links and further work

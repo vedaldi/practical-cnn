@@ -37,7 +37,7 @@
 <li><a href="#getting-started">Getting started</a></li>
 <li><a href="#part1">Part 1: CNN building blocks</a><ul>
 <li><a href="#part1.1">Part 1.1: convolution</a></li>
-<li><a href="#part1.2">Part 1.2: non-linear gating</a></li>
+<li><a href="#part1.2">Part 1.2: non-linear activation functions</a></li>
 <li><a href="#part1.3">Part 1.3: pooling</a></li>
 <li><a href="#part1.4">Part 1.4: normalisation</a></li>
 </ul>
@@ -194,16 +194,16 @@ imagesc(-abs(y_lap)) ; title('- abs(filter output)') ;
 <li>What image structure are detected?</li>
 </ul>
 </blockquote>
-<h3 id="part1.2">Part 1.2: non-linear gating</h3>
+<h3 id="part1.2">Part 1.2: non-linear activation functions</h3>
 <p>As we stated in the introduction, CNNs are obtained by composing several different functions. In addition to the linear filters shown in the <a href="#part1.1">previous part</a>, there are several non-linear operators as well.</p>
 <blockquote>
 <p><strong>Question:</strong> Some of the functions in a CNN <em>must</em> be non-linear. Why?</p>
 </blockquote>
-<p>The simplest non-linearity is obtained by following a linear filter by a <em>non-linear gating function</em>, applied identically to each component (i.e. point-wise) of a feature map. The simplest such function is the <em>Rectified Linear Unit (ReLU)</em>
+<p>The simplest non-linearity is obtained by following a linear filter by a <em>non-linear activation function</em>, applied identically to each component (i.e. point-wise) of a feature map. The simplest such function is the <em>Rectified Linear Unit (ReLU)</em>
 $$
   y_{ijk} = \max{0, x_{ijk}}.
 $$
-This function is implemented by <code>vl_relu</code>; let's try this out:</p>
+This function is implemented by <code>vl_nnrelu</code>; let's try this out:</p>
 <pre><code class="matlab">w = single(repmat([1 0 -1], [1, 1, 3])) ;
 w = cat(4, w, -w) ;
 y = vl_nnconv(x, w, []) ;
@@ -527,7 +527,7 @@ and similarly for the bias term. Here $\mu$ is the <em>momentum rate</em> and $\
 </ul>
 </blockquote>
 <p>The parameters of the algorithm are set as follows:</p>
-<pre><code class="Malta">numIterations = 500 ;
+<pre><code class="matlab">numIterations = 500 ;
 rate = 5 ;
 momentum = 0.9 ;
 shrinkRate = 0.0001 ;
@@ -746,9 +746,17 @@ decodeCharacters(net, imdb, im, res) ;
 <p>In MatConvNet this is almost trivial as it builds on the easy-to-use GPU support in MATLAB. You can follow this list of steps to try it out:</p>
 <ol>
 <li>Clear the models generated and cached in the previous steps. To do this, rename or delete the directories <code>data/characters-experiment</code> and <code>data/characters-jit-experiment</code>.</li>
-<li>Make sure that MatConvNet is compiled with GPU support. To do this, use
-    <code>&gt; setup('useGpu', true) ;</code></li>
-<li>Try again training the model of <code>exercise4.m</code> switching to <code>true</code> the <code>useGpu</code> flag.</li>
+<li>
+<p>Make sure that MatConvNet is compiled with GPU support. To do this, use</p>
+<p>```matlab</p>
+<blockquote>
+<p>setup('useGpu', true) ;
+```</p>
+</blockquote>
+</li>
+<li>
+<p>Try again training the model of <code>exercise4.m</code> switching to <code>true</code> the <code>useGpu</code> flag.</p>
+</li>
 </ol>
 <blockquote>
 <p><strong>Task:</strong> Follow the steps above and note the speed of training. How many images per second can you process now?</p>

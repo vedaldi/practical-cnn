@@ -105,6 +105,7 @@ $$
 > **Task:** check that the size of the variable `y` matches your calculations.
 
 We can now visualise the output `y` of the convolution. In order to do this, use the [`vl_imarraysc`](http://www.vlfeat.org/matlab/vl_imarraysc.html) function to display an image for each feature channel in `y`:
+
 ```matlab
 % Visualize the output y
 figure(2) ; clf ; vl_imarraysc(y) ; colormap gray ;
@@ -113,12 +114,15 @@ figure(2) ; clf ; vl_imarraysc(y) ; colormap gray ;
 > **Question:** Study the feature channels obtained. Most will likely contain a strong response in correspondences of edges in the input image `x`. Recall that `w` was obtained by drawing random numbers from a Gaussian distribution. Can you explain this phenomenon?
 
 So far filters preserve the resolution of the input feature map. However, it is often useful to *downsample the output*. This can be obtained by using the `stride` option in `vl_nnconv`:
+
 ```matlab
 % Try again, downsampling the output
 y_ds = vl_nnconv(x, w, [], 'stride', 16) ;
 figure(3) ; clf ; vl_imarraysc(y_ds) ; colormap gray ;
 ```
+
 As you should have noticed in a question above, applying a filter to an image or feature map interacts with the boundaries, making the output map smaller by an amount proportional to the size of the filters. If this is undesirable, then the input array can be padded with zeros by using the `pad` option:
+
 ```matlab
 % Try padding
 y_pad = vl_nnconv(x, w, [], 'pad', 4) ;
@@ -128,6 +132,7 @@ figure(4) ; clf ; vl_imarraysc(y_pad) ; colormap gray ;
 > **Task:** Convince yourself that the previous code's output has different boundaries compared to the code that does not use padding. Can you explain the result?
 
 In order to consolidate what has been learned so far, we will now design a filter by hand:
+
 ```matlab
 w = [0  1 0 ;
      1 -4 1 ;
@@ -141,6 +146,7 @@ imagesc(y_lap) ; title('filter output') ;
 subplot(1,2,2) ;
 imagesc(-abs(y_lap)) ; title('- abs(filter output)') ;
 ```
+
 > **Questions:**
 > 
 > * What filter have we implemented?
@@ -157,7 +163,8 @@ The simplest non-linearity is obtained by following a linear filter by a *non-li
 $$
   y_{ijk} = \max\{0, x_{ijk}\}.
 $$
-This function is implemented by `vl_relu`; let's try this out:
+This function is implemented by `vl_nnrelu`; let's try this out:
+
 ```matlab
 w = single(repmat([1 0 -1], [1, 1, 3])) ;
 w = cat(4, w, -w) ;
@@ -181,10 +188,12 @@ $$
    y_{ijk} = \max \{ y_{i'j'k} : i \leq i' < i+p, j \leq j' < j + p \}
 $$
 Max pooling is implemented by the `vl_nnpool` function. Try this now:
+
 ```matlab
 y = vl_nnpool(x, 15) ;
 figure(6) ; clf ; imagesc(y) ;
 ```
+
 > **Question:** look at the resulting image. Can you interpret the result?
 
 The function `vl_nnpool` supports subsampling and padding just like `vl_nnconv`. However, for max-pooling feature maps are padded with the value $-\infty$ instead of 0. Why?
@@ -200,6 +209,7 @@ where $G(k) = \left[k - \lfloor \frac{\rho}{2} \rfloor, k + \lceil \frac{\rho}{2
 > **Task:** Understand what this operator is doing. How would you set $\kappa$, $\alpha$ and $\beta$ to achieve simple $L^2$ normalisation?
 
 Now let's try this out:
+
 ```matlab
 rho = 5 ;
 kappa = 0 ;

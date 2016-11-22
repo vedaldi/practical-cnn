@@ -17,9 +17,11 @@ $$
    \newcommand{\by}{\mathbf{y}}
    \newcommand{\bz}{\mathbf{z}}
    \newcommand{\bw}{\mathbf{w}}
+   \newcommand{\bp}{\mathbf{p}}
    \newcommand{\cP}{\mathcal{P}}
    \newcommand{\cN}{\mathcal{N}}
    \newcommand{\vc}{\operatorname{vec}}
+   \newcommand{\vv}{\operatorname{vec}}
 $$
 
 ## Getting started
@@ -246,69 +248,105 @@ where $\eta_t \in \mathbb{R}_+$ is the *learning rate*.
 
 ### Part 2.1: the theory of back-propagation
 
-The basic computational problem to solve is the calculation of the gradient of the function with respect to the parameter $\bw$. Since $f$ is the composition of several functions, the key ingredient is the *chain rule*:
+Training CNNs is normally done using a gradient-based optimization method. The CNN $f$ is the composition of $L$ layers $f_l$ each with parameters $\bw_l$, which in the simplest case of a chain looks like:
 $$
-\begin{align}
- \frac{\partial f}{\partial \bw_l} &= 
-  \frac{\partial}{\partial \bw_l}
-  f_L(\dots f_2(f_1(\bx;\bw_1);\bw_2)\dots),\bw_{L})
-  \\
-  &= 
-  \frac{\partial \vc f_L}{\partial \vc\bx_L^\top}
-  \frac{\partial \vc f_{L-1}}{\partial \vc\bx_{L-1}^\top}
-  \dots
-  \frac{\partial \vc f_{l+1}}{\partial \vc\bx_{l+1}^\top}
-  \frac{\partial \vc f_l}{\partial \bw_l^\top}
-\end{align}
+ \bx_0
+ \longrightarrow
+ \underset{\displaystyle\underset{\displaystyle\bw_1}{\uparrow}}{\boxed{f_1}}
+ \longrightarrow
+ \bx_1
+ \longrightarrow
+ \underset{\displaystyle\underset{\displaystyle\bw_2}{\uparrow}}{\boxed{f_2}}
+ \longrightarrow
+ \bx_2
+ \longrightarrow
+ \dots
+ \longrightarrow
+ \bx_{L-1}
+ \longrightarrow
+ \underset{\displaystyle\underset{\displaystyle\bw_L}{\uparrow}}{\boxed{f_L}}
+ \longrightarrow
+ \bx_L
 $$
-The notation requires some explanation. Recall that each function $f_l$ is a map from a $M\times N\times K$ array to a $M' \times N' \times K'$ array. The operator $\vc$ *vectorises* such arrays by stacking their elements in a column vector (the stacking order is arbitrary but conventionally column-major). The symbol $\partial \vc f_l / \partial \vc \bx_l^\top$ then denotes the derivative of a column vector of output variables by a row vector of input variables. Note that $\bw_l$ is already assumed to be a column vector so it does not require explicit vectorisation.
+During learning, the last layer of the network is the *loss function* that should be minimized. Hence, the output $\bx_L = x_L$ of the network is a **scalar** quantity (a single number).
 
-> **Questions:** Make sure you understand the structure of this formula and answer the following:
-> 
-> * $\partial \vc f_l / \partial \vc \bx_l^\top$ is a matrix. What are its dimensions?
-> * The formula can be rewritten with a slightly different notation by replacing the symbols $f_l$ with the symbols $\bx_{l+1}$. If you do so, do you notice any formal cancellation?
-> * The formula only includes the derivative symbols. However, these derivatives must be computed at a well defined point. What is this point?
-
-To apply the chain rule we must be able to compute, for each function $f_l$, its derivative with respect to the parameters $\bw_l$ as well as its input $\bx_l$. While this could be done naively, a problem is the very high dimensionality of the matrices involved in this calculation as these are $M'N'K' \times MNK$ arrays. We will now introduce a ``trick'' that allows this to be reduced to working with $MNK$ numbers only and which will yield the *back-propagation algorithm*. 
-
-The key observation is that we are not after $\partial \vc f_l / \partial \bw_l^\top$ but after $\partial f/ \partial\bw_l^\top$:
+The gradient is easily computed using using the **chain rule**. If *all* network variables and parameters are scalar, this is given by[^derivative]:
 $$
- \frac{\partial f}{\partial\bw_l^\top}
+ \frac{\partial f}{\partial w_l}(x_0;w_1,\dots,w_L)
  =
- \frac{\partial g_{l+1}}{\partial \vc \bx_{l+1}^\top}
-  \frac{\partial \vc f_l}{\partial \bw_l^\top}
+ \frac{\partial f_L}{\partial x_{L-1}}(x_{L-1};w_L) \times
+ \cdots
+ \times
+ \frac{\partial f_{l+1}}{\partial x_l}(x_l;w_{l+1}) \times
+ \frac{\partial f_{l}}{\partial w_l}(x_{l-1};w_l)
 $$
-where $g_{l+1} = f_L \circ \dots \circ f_{l+1}$ is the ``tail'' of the CNN.
+With tensors, however, there are some complications. Consider for instance the derivative of a function $\by=f(\bx)$ where both $\by$ and $\bx$ are tensors; this is formed by taking the derivative of each scalar element in the output $\by$ with respect to each scalar element in the input $\bx$. If $\bx$ has dimensions $H \times W \times C$ and $\by$ has dimensions $H' \times W' \times C'$, then the derivative contains $HWCH'W'C'$ elements, which is often unmanageable (in the order of several GBs of memory for a single derivative).
 
-> **Question:** Explain why the dimensions of the vectors $\partial g_{l+1}/\partial \vc \bx_{l+1}$ and $\partial f/\partial \bw_{l}$ equals the number of elements in $\bx_{l+1}$ and $\bw_l$ respectively. Hence, in particular, the symbol $\partial g_{l+1}/\partial \bx_{l+1}$ (without vectorisation) denotes an array with the same size of $\bx_{l+1}$.
-> 
-> **Hint:** recall that the last layer is the loss.
+Note that all intermediate derivatives in the chain rule may be affected by this size explosion except for the derivative of the network output that, being the loss, is a scalar.
 
-Hence the algorithm can focus on computing the derivatives of $g_{l}$ instead of $f_{l}$ which are far lower-dimensional. To see how this can be done iteratively, decompose $g_l$ as:
+> **Question:** The output derivatives have the same size as the parameters in the network. Why?
+
+**Back-propagation** allows computing the output derivatives in a memory-efficient manner. To see how, the first step is to generalize the equation above to tensors using a matrix notation. This is done by converting tensors into vectors by using the $\vv$ (stacking)[^stacking] operator:
 $$
- \bx_{l}
- \longrightarrow 
- \underset{\displaystyle\underset{\displaystyle\bw_l}{\uparrow}}{\boxed{f_l}} 
- \longrightarrow
- \bx_{l+1}  
- \longrightarrow 
- \boxed{g_{l+1}}
- \longrightarrow
- \bx_{L}
+ \frac{\partial \vv f}{\partial \vv^\top \bw_l}
+ =
+ \frac{\partial \vv f_L}{\partial \vv^\top \bx_L} \times
+ \cdots
+ \times
+ \frac{\partial \vv f_{l+1}}{\partial \vv^\top \bx_l} \times
+ \frac{\partial \vv f_{l}}{\partial \vv^\top \bw_l}
 $$
-Then the key of the iteration is obtaining the derivatives for layer $l$ given the ones for layer $l+1$:
+In order to make this computation memory efficient, we *project* the derivative with respect to a tensor $\bp_L = 1$ as follows:
+$$
+ (\vv \bp_L)^\top \times \frac{\partial \vv f}{\partial \vv^\top \bw_l}
+ =
+ (\vv \bp_L)^\top
+ \times
+ \frac{\partial \vv f_L}{\partial \vv^\top \bx_L} \times
+ \cdots
+ \times
+ \frac{\partial \vv f_{l+1}}{\partial \vv^\top \bx_l} \times
+ \frac{\partial \vv f_{l}}{\partial \vv^\top \bw_l}
+$$
+Note that $\bp_L=1$ has the same dimension as $\bx_L$ (the scalar loss) and, being equal to 1, multiplying it to the left of the expression does not change anything. Things are more interesting when products are evaluated from the left to the right, i.e. *backward from the output to the input* of the CNN. The first such factors is given by:
+\begin{equation}
+\label{e:factor}
+ (\vv \bp_{L-1})^\top = (\vv \bp_L)^\top
+ \times
+ \frac{\partial \vv f_L}{\partial \vv^\top \bx_L}
+\end{equation}
+This results in a new projection vector $\bp_{L-1}$, which can then be multiplied from the left to obtain $\bp_{L-2}$ and so on. The last projection $\bp_l$ is the desired derivative. Crucially, each projection $\bp_q$ takes as much memory as the corresponding variable $\bx_q$.
 
-* Input:
-  * the derivative $\partial g_{l+1}/\partial \bx_{l+1}$.
-* Output:
-  * the derivative $\partial g_{l}/\partial \bx_{l}$
-  * the derivative  $\partial g_{l}/\partial \bw_{l}$
+Some might have noticed that, while projections remain small, each factor \eqref{e:factor} does contain one of the large derivatives that we cannot compute explicitly. The trick is that CNN toolboxes contain code that can compute the projected derivatives without explicitly computing this large factor. In particular, for any building block function $\by=f(\bx;\bw)$, a toolbox such as MatConvNet will implement:
 
-> **Question:** Suppose that $f_l$ is the function $\bx_{l+1} = A \bx_{l}$ where $\bx_{l}$ and $\bx_{l+1}$ are column vectors. Suppose that $B = \partial g_{l+1}/\partial \bx_{l+1} $ is given. Derive an expression for $C = \partial g_{l}/\partial \bx_{l}$ and an expression for $D =  \partial g_{l}/\partial \bw_{l}$.
+* A **forward mode** computing the function $\by=f(\bx;\bw)$.
+* A **backward mode** computing the derivatives of the projected function $\langle \bp, f(\bx;\bw) \rangle$ with respect to the input $\bx$ and parameter $\bw$:
+
+$$
+\frac{\partial}{\partial \bx} \left\langle \bp, f(\bx;\bw) \right\rangle,
+\qquad
+\frac{\partial}{\partial \bw} \left\langle \bp, f(\bx;\bw) \right\rangle.
+$$
+
+For example, this is how this looks for the convolution operator:
+
+```.language-matlab
+y = vl_nnconv(x,w,b) ; % forward mode (get output)
+p = randn(size(y), 'single') ; % projection tensor (arbitrary)
+[dx,dw,db] = vl_nnconv(x,w,b,p) ; % backward mode (get projected derivatives)
+```
+
+and this is how it looks for ReLU operator:
+
+```.language-matlab
+y = vl_nnrelu(x) ;
+p = randn(size(y), 'single') ;
+dx = vl_nnrelu(x,p) ;
+```
 
 ### Part 2.1: using back-propagation in practice
 
-A key feature of MatConvNet and similar neural network packages is the ability to support back-propagation. In order to do so, lets focus on a single computational block $f$, followed by a function $g$:
+To see how backpropagation is used in practice, focus on a computational block $f$, followed by a function $g$:
 $$
  \bx
  \longrightarrow 
@@ -320,7 +358,9 @@ $$
  \longrightarrow
  z
 $$
-where *$z$ is assumed to be a scalar*. Then each computation block (for example `vl_nnconv` or `vl_nnpool`) can compute $\partial z / \partial \bx$ and $\partial z / \partial \bw$ given as input $\bx$ and $\partial z / \partial \by$. Let's put this into practice:
+Here $g$ lumps the rest of the network, from $\by$ to the final scalar output $z$. The goal is to compute the derivatives $\partial z / \partial \bx$ and $\partial z / \partial \bw$ given the derivative $\bp = \partial z / \partial \by$ of the rest of the network $g$.
+
+Let's put this into practice by letting $f$ be a convolutional layer and by filling $\bp = \partial z / \partial \by$ with random values for the sake of the example:
 
 ```matlab
 % Read an example image
@@ -584,7 +624,7 @@ ans =
       set: [1x24206 double]
 ```
 
-These are stored as the array `imdb.images.id` is a 24,206-dimensional vector of numeric IDs for each of the 24,206 character images in the dataset. `imdb.images.data` contains a $32 \times 32$ image for each character, stored as a slide of a $32\times 32\times 24,\!206$-dimensional array. `imdb.images.label` is a vector of image labels, denoting which one of the 26 possible characters it is. `imdb.images.set` is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.
+These are stored as the array `imdb.images.id` is a 29,198-dimensional vector of numeric IDs for each of the 29,198  character images in the dataset. `imdb.images.data` contains a $32 \times 32$ image for each character, stored as a slide of a $32\times 32\times 29,\!198$-dimensional array. `imdb.images.label` is a vector of image labels, denoting which one of the 26 possible characters it is. `imdb.images.set` is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.
 
 <img height=400px src="images/chars.png" alt="cover"/>
 

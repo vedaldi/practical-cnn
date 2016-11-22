@@ -1,4 +1,7 @@
-name = practical-cnn
+# Build practical
+
+name ?= practical-cnn
+ver ?= 2016a
 
 code=\
 decodeCharacters.m \

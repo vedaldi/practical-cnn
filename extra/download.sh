@@ -16,3 +16,10 @@ then
     tar xzvf data/matconvnet.tar.gz
     mv matconvnet-1.0-beta23 matconvnet
 fi
+
+if test ! -e imagenet-vgg-verydeep-16.mat
+then
+    wget http://www.vlfeat.org/matconvnet/models/imagenet-vgg-verydeep-16.mat \
+        --output-document=data/imagenet-vgg-verydeep-16.mat --continue
+fi
+

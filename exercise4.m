@@ -80,7 +80,8 @@ net = load('data/chars-experiment/charscnn.mat') ;
 %net = load('data/chars-experiment/charscnn-jit.mat') ;
 
 % Load the sentence
-im = im2single(imread('data/sentence-lato.png')) ;
+[im,cmap] = imread('data/sentence-lato.png') ;
+im = im2single(ind2gray(im,cmap)) ;
 im = 256 * (im - net.imageMean) ;
 
 % Apply the CNN to the larger image

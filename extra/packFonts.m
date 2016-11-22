@@ -11,8 +11,8 @@ labels = cell(numel(fonts), numel(chars)) ;
 
 for i = 1:numel(fonts)
   for j = 1:numel(chars)
-    im{i,j} = imread(fullfile('extra', 'fonts', fonts{i}, [chars(j) '.png'])) ;
-    im{i,j} = im2single(im{i,j}) ;
+    [p,cmap] = imread(fullfile('extra', 'fonts', fonts{i}, [chars(j) '.png'])) ;
+    im{i,j} = im2single(ind2gray(p,cmap)) ;
     labels{i,j} = j ;
   end
 end

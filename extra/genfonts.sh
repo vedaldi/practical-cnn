@@ -11,23 +11,21 @@
 #
 # Do not forget to pack the font using the extra/packFonts.m script.
 
-
 googleFontDir="extra/googlefontdirectory"
 chars="a b c d e f g h i j k l m n o p q r s t u v w x y z"
 
 # Download Google's fonts
 if test ! -e "$googleFontDir"
 then
-    hg clone https://code.google.com/p/googlefontdirectory/ \
-        -r 4a99da98ba51 \
-        "$googleFontDir"
+    git clone https://github.com/google/fonts/ "$googleFontDir"
+    (cd "$googleFontDir" ; git checkout bdc1940)
 fi
 
 # Only get the fonts that have latin-ext encoding
-fontFamilies=$(grep latin-ext "$googleFontDir"/ofl/*/METADATA.json | \
+fontFamilies=$(grep latin-ext "$googleFontDir"/ofl/*/METADATA.pb | \
     sed -E 's#.*ofl/([a-zA-Z0-9]+)/METADATA.*#\1#g')
 echo -n "Found" $(echo "$fontFamilies" | wc -l) "latin font families "
-echo "out of" $(ls $googleFontDir/ofl/*/METADATA.json | wc -l)
+echo "out of" $(ls $googleFontDir/ofl/*/METADATA.pb | wc -l)
 
 fonts=""
 for i in $fontFamilies

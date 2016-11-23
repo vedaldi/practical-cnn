@@ -9,3 +9,6 @@ data/vlfeat*
 vlfeat/
 data/matconvnet*
 base.css
+doc/prism.css
+doc/prism.js
+*~

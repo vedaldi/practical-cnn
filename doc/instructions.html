@@ -3,26 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Image classification practical (CNN version)</title>
+  <title>VGG Practical</title>
   <link rel="stylesheet" href="base.css" />
-  <script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    extensions: ["tex2jax.js"],
-    jax: ["input/TeX", "output/HTML-CSS"],
-    tex2jax: {
-      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-      processEscapes: true
-    },
-    "HTML-CSS": { availableFonts: ["TeX"] }
-  });
-  </script>
-  <script type="text/javascript"
-          src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
-  <!-- Code highlights -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/default.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script>
+  <link rel="stylesheet" href="prism.css" />
 </head>
 <body>
 <h1 id="vgg-convolutional-neural-networks-practical">VGG Convolutional Neural Networks Practical</h1>
@@ -76,21 +59,23 @@
 </li>
 </ul>
 </div>
-<p>$$
+<p><mathjax>$$
    \newcommand{\bx}{\mathbf{x}}
    \newcommand{\by}{\mathbf{y}}
    \newcommand{\bz}{\mathbf{z}}
    \newcommand{\bw}{\mathbf{w}}
+   \newcommand{\bp}{\mathbf{p}}
    \newcommand{\cP}{\mathcal{P}}
    \newcommand{\cN}{\mathcal{N}}
    \newcommand{\vc}{\operatorname{vec}}
-$$</p>
+   \newcommand{\vv}{\operatorname{vec}}
+$$</mathjax></p>
 <h2 id="getting-started">Getting started</h2>
 <p>Read and understand the <a href="../overview/index.html#installation">requirements and installation instructions</a>. The download links for this practical are:</p>
 <ul>
-<li>Code and data: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2015a.tar.gz">practical-cnn-2015a.tar.gz</a></li>
-<li>Code only: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2015a-code-only.tar.gz">practical-cnn-2015a-code-only.tar.gz</a></li>
-<li>Data only: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2015a-data-only.tar.gz">practical-cnn-2015a-data-only.tar.gz</a></li>
+<li>Code and data: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2016a.tar.gz">practical-cnn-2016a.tar.gz</a></li>
+<li>Code only: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2016a-code-only.tar.gz">practical-cnn-2016a-code-only.tar.gz</a></li>
+<li>Data only: <a href="http://www.robots.ox.ac.uk/~vgg/share/practical-cnn-2016a-data-only.tar.gz">practical-cnn-2016a-data-only.tar.gz</a></li>
 <li><a href="https://github.com/vedaldi/practical-cnn">Git repository</a> (for lab setters and developers)</li>
 </ul>
 <p>After the installation is complete, open and edit the script <code>exercise1.m</code> in the MATLAB editor. The script contains commented code and a description for all steps of this exercise, for <a href="#part1">Part I</a> of this document. You can cut and paste this code into the MATLAB window to run it, and will need to modify it as you go through the session. Other files <code>exercise2.m</code>, <code>exercise3.m</code>, and <code>exercise4.m</code> are given for <a href="#part2">Part II</a>, <a href="#part3">III</a>, and <a href="part4">IV</a>.</p>
@@ -98,17 +83,17 @@ $$</p>
 <h2 id="part1">Part 1: CNN building blocks</h2>
 <h3 id="part1.1">Part 1.1: convolution</h3>
 <p>A feed-forward neural network can be thought of as the composition of number of functions 
-$$
+<mathjax>$$
 f(\bx) = f_L(\dots f_2(f_1(\bx;\bw_1);\bw_2)\dots),\bw_{L}).
-$$
-Each function $f_l$ takes as input a datum $\bx_l$ and a parameter vector $\bw_l$ and produces as output a datum $\bx_{l+1}$. While the type and sequence of functions is usually handcrafted, the parameters $\bw=(\bw_1,\dots,\bw_L)$ are <em>learned from data</em> in order to solve a target problem, for example classifying images or sounds.</p>
-<p>In a <em>convolutional neural network</em> data and functions have additional structure. The data $\bx_1,\dots,\bx_n$ are images, sounds, or more in general maps from a lattice<sup id="fnref:lattice"><a class="footnote-ref" href="#fn:lattice" rel="footnote">1</a></sup> to one or more real numbers. In particular, since the rest of the practical will focus on computer vision applications, data will be 2D arrays of pixels. Formally, each $\bx_i$ will be a $M \times N \times K$ real array of $M \times N$ pixels and $K$ channels per pixel. Hence the first two dimensions of the array span space, while the last one spans channels. Note that only the input $\bx=\bx_1$ of the network is an actual image, while the remaining data are intermediate <em>feature maps</em>.</p>
-<p>The second property of a CNN is that the functions $f_l$ have a <em>convolutional structure</em>. This means that $f_l$ applies to the input map $\bx_l$ an operator that is <em>local and translation invariant</em>. Examples of convolutional operators are applying a bank of linear filters to $\bx_l$. </p>
+$$</mathjax>
+Each function <mathjax>$f_l$</mathjax> takes as input a datum <mathjax>$\bx_l$</mathjax> and a parameter vector <mathjax>$\bw_l$</mathjax> and produces as output a datum <mathjax>$\bx_{l+1}$</mathjax>. While the type and sequence of functions is usually handcrafted, the parameters <mathjax>$\bw=(\bw_1,\dots,\bw_L)$</mathjax> are <em>learned from data</em> in order to solve a target problem, for example classifying images or sounds.</p>
+<p>In a <em>convolutional neural network</em> data and functions have additional structure. The data <mathjax>$\bx_1,\dots,\bx_n$</mathjax> are images, sounds, or more in general maps from a lattice<sup id="fnref:lattice"><a class="footnote-ref" href="#fn:lattice" rel="footnote">1</a></sup> to one or more real numbers. In particular, since the rest of the practical will focus on computer vision applications, data will be 2D arrays of pixels. Formally, each <mathjax>$\bx_i$</mathjax> will be a <mathjax>$M \times N \times K$</mathjax> real array of <mathjax>$M \times N$</mathjax> pixels and <mathjax>$K$</mathjax> channels per pixel. Hence the first two dimensions of the array span space, while the last one spans channels. Note that only the input <mathjax>$\bx=\bx_1$</mathjax> of the network is an actual image, while the remaining data are intermediate <em>feature maps</em>.</p>
+<p>The second property of a CNN is that the functions <mathjax>$f_l$</mathjax> have a <em>convolutional structure</em>. This means that <mathjax>$f_l$</mathjax> applies to the input map <mathjax>$\bx_l$</mathjax> an operator that is <em>local and translation invariant</em>. Examples of convolutional operators are applying a bank of linear filters to <mathjax>$\bx_l$</mathjax>. </p>
 <p>In this part we will familiarise ourselves with a number of such convolutional and non-linear operators. The first one is the regular <em>linear convolution</em> by a filter bank. We will start by focusing our attention on a single function relation as follows:
-$$
+<mathjax>$$
  f: \mathbb{R}^{M\times N\times K} \rightarrow \mathbb{R}^{M' \times N' \times K'},
  \qquad \bx \mapsto \by.
-$$
+$$</mathjax>
 Open the <code>example1.m</code> file, select the following part of the code, and execute it in MATLAB (right button &gt; <code>Evaluate selection</code> or <code>Shift+F7</code>).</p>
 <pre><code class="matlab">% Read an example image
 x = imread('peppers.png') ;
@@ -126,7 +111,7 @@ figure(1) ; clf ; imagesc(x)
 <blockquote>
 <p><strong>Question.</strong> The third dimension of <code>x</code> is 3. Why?</p>
 </blockquote>
-<p>Now we will create a bank 10 of $5 \times 5 \times 3$ filters.</p>
+<p>Now we will create a bank 10 of <mathjax>$5 \times 5 \times 3$</mathjax> filters.</p>
 <pre><code class="matlab">% Create a bank of linear filters
 w = randn(5,5,3,10,'single') ;
 </code></pre>
@@ -137,15 +122,15 @@ y = vl_nnconv(x, w, []) ;
 </code></pre>
 
 <p><strong>Remark:</strong> You might have noticed that the third argument to the <code>vl_nnconv</code> function is the empty matrix <code>[]</code>. It can be otherwise used to pass a vector of bias terms to add to the output of each filter.</p>
-<p>The variable <code>y</code> contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map $\bx$ with $K$ channels. Furthermore, there are $K'$ such filters, generating a $K'$ dimensional map $\by$ as follows
-$$
+<p>The variable <code>y</code> contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map <mathjax>$\bx$</mathjax> with <mathjax>$K$</mathjax> channels. Furthermore, there are <mathjax>$K'$</mathjax> such filters, generating a <mathjax>$K'$</mathjax> dimensional map <mathjax>$\by$</mathjax> as follows
+<mathjax>$$
 y_{i'j'k'} = \sum_{ijk} w_{ijkk'} x_{i+i',j+j',k}
-$$</p>
+$$</mathjax></p>
 <blockquote>
 <p><strong>Questions:</strong> Study carefully this expression and answer the following:</p>
 <ul>
-<li>Given that the input map $\bx$ has $M \times N \times K$ dimensions and that each of the $K'$ filters has dimension $M_f \times N_f \times K$, what is the dimension of $\by$?</li>
-<li>Note that $x$ is indexed by $i+i'$ and $j+j'$, but that there is no plus sign between $k$ and $k'$. Why?</li>
+<li>Given that the input map <mathjax>$\bx$</mathjax> has <mathjax>$M \times N \times K$</mathjax> dimensions and that each of the <mathjax>$K'$</mathjax> filters has dimension <mathjax>$M_f \times N_f \times K$</mathjax>, what is the dimension of <mathjax>$\by$</mathjax>?</li>
+<li>Note that <mathjax>$x$</mathjax> is indexed by <mathjax>$i+i'$</mathjax> and <mathjax>$j+j'$</mathjax>, but that there is no plus sign between <mathjax>$k$</mathjax> and <mathjax>$k'$</mathjax>. Why?</li>
 </ul>
 <p><strong>Task:</strong> check that the size of the variable <code>y</code> matches your calculations.</p>
 </blockquote>
@@ -200,9 +185,9 @@ imagesc(-abs(y_lap)) ; title('- abs(filter output)') ;
 <p><strong>Question:</strong> Some of the functions in a CNN <em>must</em> be non-linear. Why?</p>
 </blockquote>
 <p>The simplest non-linearity is obtained by following a linear filter by a <em>non-linear activation function</em>, applied identically to each component (i.e. point-wise) of a feature map. The simplest such function is the <em>Rectified Linear Unit (ReLU)</em>
-$$
-  y_{ijk} = \max{0, x_{ijk}}.
-$$
+<mathjax>$$
+  y_{ijk} = \max\{0, x_{ijk}\}.
+$$</mathjax>
 This function is implemented by <code>vl_nnrelu</code>; let's try this out:</p>
 <pre><code class="matlab">w = single(repmat([1 0 -1], [1, 1, 3])) ;
 w = cat(4, w, -w) ;
@@ -217,15 +202,15 @@ subplot(1,2,2) ; vl_imarraysc(z) ;
 <blockquote>
 <p><strong>Tasks:</strong></p>
 <ul>
-<li>Run the code above and understand what the filter $\bw$ is doing.</li>
-<li>Explain the final result $\bz$.</li>
+<li>Run the code above and understand what the filter <mathjax>$\bw$</mathjax> is doing.</li>
+<li>Explain the final result <mathjax>$\bz$</mathjax>.</li>
 </ul>
 </blockquote>
 <h3 id="part1.3">Part 1.3: pooling</h3>
 <p>There are several other important operators in a CNN. One of them is <em>pooling</em>.  A pooling operator operates on individual feature channels, coalescing nearby feature values into one by the application of a suitable operator. Common choices include max-pooling (using the max operator) or sum-pooling (using summation). For example, <em>max-pooling</em> is defined as:
-$$
-   y_{ijk} = \max { y_{i'j'k} : i \leq i' &lt; i+p, j \leq j' &lt; j + p }
-$$
+<mathjax>$$
+   y_{ijk} = \max \{ y_{i'j'k} : i \leq i' &lt; i+p, j \leq j' &lt; j + p \}
+$$</mathjax>
 Max pooling is implemented by the <code>vl_nnpool</code> function. Try this now:</p>
 <pre><code class="matlab">y = vl_nnpool(x, 15) ;
 figure(6) ; clf ; imagesc(y) ;
@@ -234,15 +219,15 @@ figure(6) ; clf ; imagesc(y) ;
 <blockquote>
 <p><strong>Question:</strong> look at the resulting image. Can you interpret the result?</p>
 </blockquote>
-<p>The function <code>vl_nnpool</code> supports subsampling and padding just like <code>vl_nnconv</code>. However, for max-pooling feature maps are padded with the value $-\infty$ instead of 0. Why?</p>
+<p>The function <code>vl_nnpool</code> supports subsampling and padding just like <code>vl_nnconv</code>. However, for max-pooling feature maps are padded with the value <mathjax>$-\infty$</mathjax> instead of 0. Why?</p>
 <h3 id="part1.4">Part 1.4: normalisation</h3>
-<p>Another important CNN building block is channel-wise normalisation. This operator normalises the vector of feature channels at each spatial location in the input map $\bx$. The form of the normalisation operator is actually rather curious:
-$$
+<p>Another important CNN building block is channel-wise normalisation. This operator normalises the vector of feature channels at each spatial location in the input map <mathjax>$\bx$</mathjax>. The form of the normalisation operator is actually rather curious:
+<mathjax>$$
   y_{ijk'} = \frac{x_{ijk}}{\left(\kappa + \alpha \sum_{k\in G(k')}  x_{ijk}^2\right)^{\beta}}
-$$
-where $G(k) = \left[k - \lfloor \frac{\rho}{2} \rfloor, k + \lceil \frac{\rho}{2} \rceil\right] \cap {1, 2, \dots, K}$ is a group of $\rho$ consecutive feature channels in the input map.</p>
+$$</mathjax>
+where <mathjax>$G(k) = \left[k - \lfloor \frac{\rho}{2} \rfloor, k + \lceil \frac{\rho}{2} \rceil\right] \cap \{1, 2, \dots, K\}$</mathjax> is a group of <mathjax>$\rho$</mathjax> consecutive feature channels in the input map.</p>
 <blockquote>
-<p><strong>Task:</strong> Understand what this operator is doing. How would you set $\kappa$, $\alpha$ and $\beta$ to achieve simple $L^2$ normalisation?</p>
+<p><strong>Task:</strong> Understand what this operator is doing. How would you set <mathjax>$\kappa$</mathjax>, <mathjax>$\alpha$</mathjax> and <mathjax>$\beta$</mathjax> to achieve simple <mathjax>$L^2$</mathjax> normalisation?</p>
 </blockquote>
 <p>Now let's try this out:</p>
 <pre><code class="matlab">rho = 5 ;
@@ -257,90 +242,118 @@ figure(6) ; clf ; imagesc(y_nrm) ;
 <p><strong>Tasks:</strong> </p>
 <ul>
 <li>Inspect the figure just obtained. Can you interpret it?</li>
-<li>Compute the $L^2$ norm of the feature channels in the output map <code>y_nrm</code>. What do you notice? </li>
-<li>Explain this result in relation to the particular choice of the parameters $\rho$,  $\kappa$, $\alpha$ and $\beta$.</li>
+<li>Compute the <mathjax>$L^2$</mathjax> norm of the feature channels in the output map <code>y_nrm</code>. What do you notice? </li>
+<li>Explain this result in relation to the particular choice of the parameters <mathjax>$\rho$</mathjax>,  <mathjax>$\kappa$</mathjax>, <mathjax>$\alpha$</mathjax> and <mathjax>$\beta$</mathjax>.</li>
 </ul>
 </blockquote>
 <h2 id="part-2-back-propagation-and-derivatives">Part 2: back-propagation and derivatives</h2>
-<p>The parameters of a CNN $\bw=(\bw_1,\dots\bw_L)$ should be learned in such a manner that the overall CNN function  $\bz = f(\bx;\bw)$ achieves a desired goal. In some cases,  the goal is to model the distribution of the data, which leads to a <em>generative objective</em>. Here, however, we will use $f$ as a <em>regressor</em> and obtain it by minimising a <em>discriminative objective</em>. In simple terms, we are given:</p>
+<p>The parameters of a CNN <mathjax>$\bw=(\bw_1,\dots\bw_L)$</mathjax> should be learned in such a manner that the overall CNN function  <mathjax>$\bz = f(\bx;\bw)$</mathjax> achieves a desired goal. In some cases,  the goal is to model the distribution of the data, which leads to a <em>generative objective</em>. Here, however, we will use <mathjax>$f$</mathjax> as a <em>regressor</em> and obtain it by minimising a <em>discriminative objective</em>. In simple terms, we are given:</p>
 <ul>
-<li>examples of the desired input-output relations $(\bx_1,\bz_1), \dots, (\bx_n,\bz_n)$ where $\bx_i$ are input data and $\bz_i$ corresponding output values;</li>
-<li>and a loss $\ell(\bz,\hat\bz)$ that expresses the penalty for predicting $\hat\bz$ instead of $\bz$.</li>
+<li>examples of the desired input-output relations <mathjax>$(\bx_1,\bz_1), \dots, (\bx_n,\bz_n)$</mathjax> where <mathjax>$\bx_i$</mathjax> are input data and <mathjax>$\bz_i$</mathjax> corresponding output values;</li>
+<li>and a loss <mathjax>$\ell(\bz,\hat\bz)$</mathjax> that expresses the penalty for predicting <mathjax>$\hat\bz$</mathjax> instead of <mathjax>$\bz$</mathjax>.</li>
 </ul>
-<p>We use those to write the empirical loss of the CNN $f$ by averaging over the examples:
-$$
+<p>We use those to write the empirical loss of the CNN <mathjax>$f$</mathjax> by averaging over the examples:
+<mathjax>$$
 L(\bw) = \frac{1}{n} \sum_{i=1}^n \ell(\bz_i, f(\bx_i;\bw))
-$$
-Note that the composition of the function $f$ with the loss $\ell$ can be though of as a CNN with one more layer (called a <em>loss layer</em>). Hence, with a slight abuse of notation, in the rest of this part we incorporate the loss in the function $f$ (which therefore is a map $\mathcal{X}\rightarrow\mathbb{R}$) and do not talk about it explicitly anymore.</p>
-<p>The simplest algorithm to minimise $L$, and in fact one that is used in practice, is <em>gradient descent</em>. The idea is simple: compute the gradient of the objective $L$ at a current solution $\bw^t$ and then update the latter along the direction of fastest descent of $L$:
-$$
+$$</mathjax>
+Note that the composition of the function <mathjax>$f$</mathjax> with the loss <mathjax>$\ell$</mathjax> can be though of as a CNN with one more layer (called a <em>loss layer</em>). Hence, with a slight abuse of notation, in the rest of this part we incorporate the loss in the function <mathjax>$f$</mathjax> (which therefore is a map <mathjax>$\mathcal{X}\rightarrow\mathbb{R}$</mathjax>) and do not talk about it explicitly anymore.</p>
+<p>The simplest algorithm to minimise <mathjax>$L$</mathjax>, and in fact one that is used in practice, is <em>gradient descent</em>. The idea is simple: compute the gradient of the objective <mathjax>$L$</mathjax> at a current solution <mathjax>$\bw^t$</mathjax> and then update the latter along the direction of fastest descent of <mathjax>$L$</mathjax>:
+<mathjax>$$
  \bw^{t+1} = \bw^{t} - \eta_t \frac{\partial f}{\partial \bw}(\bw^t)
-$$
-where $\eta_t \in \mathbb{R}_+$ is the <em>learning rate</em>.</p>
+$$</mathjax>
+where <mathjax>$\eta_t \in \mathbb{R}_+$</mathjax> is the <em>learning rate</em>.</p>
 <h3 id="part-21-the-theory-of-back-propagation">Part 2.1: the theory of back-propagation</h3>
-<p>The basic computational problem to solve is the calculation of the gradient of the function with respect to the parameter $\bw$. Since $f$ is the composition of several functions, the key ingredient is the <em>chain rule</em>:
-$$
-\begin{align}
- \frac{\partial f}{\partial \bw_l} &amp;= 
-  \frac{\partial}{\partial \bw_l}
-  f_L(\dots f_2(f_1(\bx;\bw_1);\bw_2)\dots),\bw_{L})
-  \
-  &amp;= 
-  \frac{\partial \vc f_L}{\partial \vc\bx_L^\top}
-  \frac{\partial \vc f_{L-1}}{\partial \vc\bx_{L-1}^\top}
-  \dots
-  \frac{\partial \vc f_{l+1}}{\partial \vc\bx_{l+1}^\top}
-  \frac{\partial \vc f_l}{\partial \bw_l^\top}
-\end{align}
-$$
-The notation requires some explanation. Recall that each function $f_l$ is a map from a $M\times N\times K$ array to a $M' \times N' \times K'$ array. The operator $\vc$ <em>vectorises</em> such arrays by stacking their elements in a column vector (the stacking order is arbitrary but conventionally column-major). The symbol $\partial \vc f_l / \partial \vc \bx_l^\top$ then denotes the derivative of a column vector of output variables by a row vector of input variables. Note that $\bw_l$ is already assumed to be a column vector so it does not require explicit vectorisation.</p>
-<blockquote>
-<p><strong>Questions:</strong> Make sure you understand the structure of this formula and answer the following:</p>
-<ul>
-<li>$\partial \vc f_l / \partial \vc \bx_l^\top$ is a matrix. What are its dimensions?</li>
-<li>The formula can be rewritten with a slightly different notation by replacing the symbols $f_l$ with the symbols $\bx_{l+1}$. If you do so, do you notice any formal cancellation?</li>
-<li>The formula only includes the derivative symbols. However, these derivatives must be computed at a well defined point. What is this point?</li>
-</ul>
-</blockquote>
-<p>To apply the chain rule we must be able to compute, for each function $f_l$, its derivative with respect to the parameters $\bw_l$ as well as its input $\bx_l$. While this could be done naively, a problem is the very high dimensionality of the matrices involved in this calculation as these are $M'N'K' \times MNK$ arrays. We will now introduce a ``trick'' that allows this to be reduced to working with $MNK$ numbers only and which will yield the <em>back-propagation algorithm</em>. </p>
-<p>The key observation is that we are not after $\partial \vc f_l / \partial \bw_l^\top$ but after $\partial f/ \partial\bw_l^\top$:
-$$
- \frac{\partial f}{\partial\bw_l^\top}
+<p>Training CNNs is normally done using a gradient-based optimization method. The CNN <mathjax>$f$</mathjax> is the composition of <mathjax>$L$</mathjax> layers <mathjax>$f_l$</mathjax> each with parameters <mathjax>$\bw_l$</mathjax>, which in the simplest case of a chain looks like:
+<mathjax>$$
+ \bx_0
+ \longrightarrow
+ \underset{\displaystyle\underset{\displaystyle\bw_1}{\uparrow}}{\boxed{f_1}}
+ \longrightarrow
+ \bx_1
+ \longrightarrow
+ \underset{\displaystyle\underset{\displaystyle\bw_2}{\uparrow}}{\boxed{f_2}}
+ \longrightarrow
+ \bx_2
+ \longrightarrow
+ \dots
+ \longrightarrow
+ \bx_{L-1}
+ \longrightarrow
+ \underset{\displaystyle\underset{\displaystyle\bw_L}{\uparrow}}{\boxed{f_L}}
+ \longrightarrow
+ \bx_L
+$$</mathjax>
+During learning, the last layer of the network is the <em>loss function</em> that should be minimized. Hence, the output <mathjax>$\bx_L = x_L$</mathjax> of the network is a <strong>scalar</strong> quantity (a single number).</p>
+<p>The gradient is easily computed using using the <strong>chain rule</strong>. If <em>all</em> network variables and parameters are scalar, this is given by[^derivative]:
+<mathjax>$$
+ \frac{\partial f}{\partial w_l}(x_0;w_1,\dots,w_L)
  =
- \frac{\partial g_{l+1}}{\partial \vc \bx_{l+1}^\top}
-  \frac{\partial \vc f_l}{\partial \bw_l^\top}
-$$
-where $g_{l+1} = f_L \circ \dots \circ f_{l+1}$ is the ``tail'' of the CNN.</p>
+ \frac{\partial f_L}{\partial x_{L-1}}(x_{L-1};w_L) \times
+ \cdots
+ \times
+ \frac{\partial f_{l+1}}{\partial x_l}(x_l;w_{l+1}) \times
+ \frac{\partial f_{l}}{\partial w_l}(x_{l-1};w_l)
+$$</mathjax>
+With tensors, however, there are some complications. Consider for instance the derivative of a function <mathjax>$\by=f(\bx)$</mathjax> where both <mathjax>$\by$</mathjax> and <mathjax>$\bx$</mathjax> are tensors; this is formed by taking the derivative of each scalar element in the output <mathjax>$\by$</mathjax> with respect to each scalar element in the input <mathjax>$\bx$</mathjax>. If <mathjax>$\bx$</mathjax> has dimensions <mathjax>$H \times W \times C$</mathjax> and <mathjax>$\by$</mathjax> has dimensions <mathjax>$H' \times W' \times C'$</mathjax>, then the derivative contains <mathjax>$HWCH'W'C'$</mathjax> elements, which is often unmanageable (in the order of several GBs of memory for a single derivative).</p>
+<p>Note that all intermediate derivatives in the chain rule may be affected by this size explosion except for the derivative of the network output that, being the loss, is a scalar.</p>
 <blockquote>
-<p><strong>Question:</strong> Explain why the dimensions of the vectors $\partial g_{l+1}/\partial \vc \bx_{l+1}$ and $\partial f/\partial \bw_{l}$ equals the number of elements in $\bx_{l+1}$ and $\bw_l$ respectively. Hence, in particular, the symbol $\partial g_{l+1}/\partial \bx_{l+1}$ (without vectorisation) denotes an array with the same size of $\bx_{l+1}$.</p>
-<p><strong>Hint:</strong> recall that the last layer is the loss.</p>
+<p><strong>Question:</strong> The output derivatives have the same size as the parameters in the network. Why?</p>
 </blockquote>
-<p>Hence the algorithm can focus on computing the derivatives of $g_{l}$ instead of $f_{l}$ which are far lower-dimensional. To see how this can be done iteratively, decompose $g_l$ as:
-$$
- \bx_{l}
- \longrightarrow 
- \underset{\displaystyle\underset{\displaystyle\bw_l}{\uparrow}}{\boxed{f_l}} 
- \longrightarrow
- \bx_{l+1}<br />
- \longrightarrow 
- \boxed{g_{l+1}}
- \longrightarrow
- \bx_{L}
-$$
-Then the key of the iteration is obtaining the derivatives for layer $l$ given the ones for layer $l+1$:</p>
+<p><strong>Back-propagation</strong> allows computing the output derivatives in a memory-efficient manner. To see how, the first step is to generalize the equation above to tensors using a matrix notation. This is done by converting tensors into vectors by using the <mathjax>$\vv$</mathjax> (stacking)[^stacking] operator:
+<mathjax>$$
+ \frac{\partial \vv f}{\partial \vv^\top \bw_l}
+ =
+ \frac{\partial \vv f_L}{\partial \vv^\top \bx_L} \times
+ \cdots
+ \times
+ \frac{\partial \vv f_{l+1}}{\partial \vv^\top \bx_l} \times
+ \frac{\partial \vv f_{l}}{\partial \vv^\top \bw_l}
+$$</mathjax>
+In order to make this computation memory efficient, we <em>project</em> the derivative with respect to a tensor <mathjax>$\bp_L = 1$</mathjax> as follows:
+<mathjax>$$
+ (\vv \bp_L)^\top \times \frac{\partial \vv f}{\partial \vv^\top \bw_l}
+ =
+ (\vv \bp_L)^\top
+ \times
+ \frac{\partial \vv f_L}{\partial \vv^\top \bx_L} \times
+ \cdots
+ \times
+ \frac{\partial \vv f_{l+1}}{\partial \vv^\top \bx_l} \times
+ \frac{\partial \vv f_{l}}{\partial \vv^\top \bw_l}
+$$</mathjax>
+Note that <mathjax>$\bp_L=1$</mathjax> has the same dimension as <mathjax>$\bx_L$</mathjax> (the scalar loss) and, being equal to 1, multiplying it to the left of the expression does not change anything. Things are more interesting when products are evaluated from the left to the right, i.e. <em>backward from the output to the input</em> of the CNN. The first such factors is given by:
+\begin{equation}
+\label{e:factor}
+ (\vv \bp_{L-1})^\top = (\vv \bp_L)^\top
+ \times
+ \frac{\partial \vv f_L}{\partial \vv^\top \bx_L}
+\end{equation}
+This results in a new projection vector <mathjax>$\bp_{L-1}$</mathjax>, which can then be multiplied from the left to obtain <mathjax>$\bp_{L-2}$</mathjax> and so on. The last projection <mathjax>$\bp_l$</mathjax> is the desired derivative. Crucially, each projection <mathjax>$\bp_q$</mathjax> takes as much memory as the corresponding variable <mathjax>$\bx_q$</mathjax>.</p>
+<p>Some might have noticed that, while projections remain small, each factor \eqref{e:factor} does contain one of the large derivatives that we cannot compute explicitly. The trick is that CNN toolboxes contain code that can compute the projected derivatives without explicitly computing this large factor. In particular, for any building block function <mathjax>$\by=f(\bx;\bw)$</mathjax>, a toolbox such as MatConvNet will implement:</p>
 <ul>
-<li>Input:</li>
-<li>the derivative $\partial g_{l+1}/\partial \bx_{l+1}$.</li>
-<li>Output:</li>
-<li>the derivative $\partial g_{l}/\partial \bx_{l}$</li>
-<li>the derivative  $\partial g_{l}/\partial \bw_{l}$</li>
+<li>A <strong>forward mode</strong> computing the function <mathjax>$\by=f(\bx;\bw)$</mathjax>.</li>
+<li>A <strong>backward mode</strong> computing the derivatives of the projected function <mathjax>$\langle \bp, f(\bx;\bw) \rangle$</mathjax> with respect to the input <mathjax>$\bx$</mathjax> and parameter <mathjax>$\bw$</mathjax>:</li>
 </ul>
-<blockquote>
-<p><strong>Question:</strong> Suppose that $f_l$ is the function $\bx_{l+1} = A \bx_{l}$ where $\bx_{l}$ and $\bx_{l+1}$ are column vectors. Suppose that $B = \partial g_{l+1}/\partial \bx_{l+1} $ is given. Derive an expression for $C = \partial g_{l}/\partial \bx_{l}$ and an expression for $D =  \partial g_{l}/\partial \bw_{l}$.</p>
-</blockquote>
+<p><mathjax>$$
+\frac{\partial}{\partial \bx} \left\langle \bp, f(\bx;\bw) \right\rangle,
+\qquad
+\frac{\partial}{\partial \bw} \left\langle \bp, f(\bx;\bw) \right\rangle.
+$$</mathjax></p>
+<p>For example, this is how this looks for the convolution operator:</p>
+<pre><code class="language-matlab">y = vl_nnconv(x,w,b) ; % forward mode (get output)
+p = randn(size(y), 'single') ; % projection tensor (arbitrary)
+[dx,dw,db] = vl_nnconv(x,w,b,p) ; % backward mode (get projected derivatives)
+</code></pre>
+
+<p>and this is how it looks for ReLU operator:</p>
+<pre><code class="language-matlab">y = vl_nnrelu(x) ;
+p = randn(size(y), 'single') ;
+dx = vl_nnrelu(x,p) ;
+</code></pre>
+
 <h3 id="part-21-using-back-propagation-in-practice">Part 2.1: using back-propagation in practice</h3>
-<p>A key feature of MatConvNet and similar neural network packages is the ability to support back-propagation. In order to do so, lets focus on a single computational block $f$, followed by a function $g$:
-$$
+<p>To see how backpropagation is used in practice, focus on a computational block <mathjax>$f$</mathjax>, followed by a function <mathjax>$g$</mathjax>:
+<mathjax>$$
  \bx
  \longrightarrow 
  \underset{\displaystyle\underset{\displaystyle\bw}{\uparrow}}{\boxed{f}} 
@@ -350,8 +363,9 @@ $$
  \boxed{g}
  \longrightarrow
  z
-$$
-where <em>$z$ is assumed to be a scalar</em>. Then each computation block (for example <code>vl_nnconv</code> or <code>vl_nnpool</code>) can compute $\partial z / \partial \bx$ and $\partial z / \partial \bw$ given as input $\bx$ and $\partial z / \partial \by$. Let's put this into practice:</p>
+$$</mathjax>
+Here <mathjax>$g$</mathjax> lumps the rest of the network, from <mathjax>$\by$</mathjax> to the final scalar output <mathjax>$z$</mathjax>. The goal is to compute the derivatives <mathjax>$\partial z / \partial \bx$</mathjax> and <mathjax>$\partial z / \partial \bw$</mathjax> given the derivative <mathjax>$\bp = \partial z / \partial \by$</mathjax> of the rest of the network <mathjax>$g$</mathjax>.</p>
+<p>Let's put this into practice by letting <mathjax>$f$</mathjax> be a convolutional layer and by filling <mathjax>$\bp = \partial z / \partial \by$</mathjax> with random values for the sake of the example:</p>
 <pre><code class="matlab">% Read an example image
 x = im2single(imread('peppers.png')) ;
 
@@ -394,7 +408,7 @@ fprintf(...
 <p><strong>Tasks:</strong></p>
 <ul>
 <li>Run the code and convince yourself that <code>vl_nnconv</code> derivatives is (probably) correct.</li>
-<li>Create a new version of this code to test the derivative calculation with respect to $\bw$.</li>
+<li>Create a new version of this code to test the derivative calculation with respect to <mathjax>$\bw$</mathjax>.</li>
 </ul>
 </blockquote>
 <p>We are now ready to build our first elementary CNN, composed of just two layers, and to compute its derivatives:</p>
@@ -439,15 +453,15 @@ fprintf(...
 
 <h2 id="part-3-learning-a-tiny-cnn">Part 3: learning a tiny CNN</h2>
 <p>In this part we will learn a very simple CNN. The CNN is composed of exactly two layers: a convolutional layer and a max-pooling layer:
-$$
+<mathjax>$$
 \bx_2 = W * \bx_1 + b, \qquad \bx_3 = \operatorname{maxpool}_\rho \bx_2.
-$$
-$W$ contains a single $3\times 3$ square filter, so that $b$ is a scalar. and the input image $\bx=\bx_1$ has a single channel.</p>
+$$</mathjax>
+<mathjax>$W$</mathjax> contains a single <mathjax>$3\times 3$</mathjax> square filter, so that <mathjax>$b$</mathjax> is a scalar. and the input image <mathjax>$\bx=\bx_1$</mathjax> has a single channel.</p>
 <blockquote>
 <p><strong>Task</strong></p>
 <ul>
 <li>Open the file <code>tinycnn.m</code> and inspect the code. Convince yourself that the code computes the CNN just described.</li>
-<li>Look at the paddings used in the code. If the input image $\bx_1$ has dimensions $M\times N$, what is the dimension of the output feature map $\bx_3$?
+<li>Look at the paddings used in the code. If the input image <mathjax>$\bx_1$</mathjax> has dimensions <mathjax>$M\times N$</mathjax>, what is the dimension of the output feature map <mathjax>$\bx_3$</mathjax>?
 </li>
 </ul>
 </blockquote>
@@ -489,36 +503,36 @@ im = im - median(im(:)) ;
 
 <p>We will come back to this preprocessing steps later.</p>
 <h3 id="part-33-learning-with-gradient-descent">Part 3.3: learning with gradient descent</h3>
-<p>We will now setup a learning problem to learn $W$ and $b$ to detect black blobs in images. Recall that the CNN computes for each image pixel $(u,v)$ a score $f(\bx;\bw,b)_{(u,v)}$. We would like this score to be:</p>
+<p>We will now setup a learning problem to learn <mathjax>$W$</mathjax> and <mathjax>$b$</mathjax> to detect black blobs in images. Recall that the CNN computes for each image pixel <mathjax>$(u,v)$</mathjax> a score <mathjax>$f(\bx;\bw,b)_{(u,v)}$</mathjax>. We would like this score to be:</p>
 <ul>
-<li>at least as large as 1 for any pixel that is marked as a blob centre (<code>pos</code> or $(u,v)\in\cP$) and</li>
-<li>at most zero for any pixel that is marked as being far away from a blob (<code>neg</code> or $(u,v)\in\cN$).</li>
+<li>at least as large as 1 for any pixel that is marked as a blob centre (<code>pos</code> or <mathjax>$(u,v)\in\cP$</mathjax>) and</li>
+<li>at most zero for any pixel that is marked as being far away from a blob (<code>neg</code> or <mathjax>$(u,v)\in\cN$</mathjax>).</li>
 </ul>
 <p>We do so by defining and then optimising the following objective function:
-$$
+<mathjax>$$
 E(\bw,b) = 
 \frac{\lambda}{2}\|\bw\|^2
 +
 \frac{1}{|\cP|}\sum_{(u,v) \in \cP}
-\max{0, 1 - f(\bx;\bw,b)<em _cN="\cN" _in="\in" _u_v_="(u,v)">{(u,v)}}
+\max\{0, 1 - f(\bx;\bw,b)_{(u,v)}\}
 +
-\frac{1}{|\cN|}\sum</em>
-\max{0, f(\bx;\bw,b)_{(u,v)}}.
-$$</p>
+\frac{1}{|\cN|}\sum_{(u,v) \in \cN}
+\max\{0, f(\bx;\bw,b)_{(u,v)}\}.
+$$</mathjax></p>
 <blockquote>
 <p><strong>Questions:</strong></p>
 <ul>
-<li>What can you say about the score of each pixel if $\lambda=0$ and $E(\bw,b) =0$?</li>
+<li>What can you say about the score of each pixel if <mathjax>$\lambda=0$</mathjax> and <mathjax>$E(\bw,b) =0$</mathjax>?</li>
 <li>Note that the objective enforces a <em>margin</em> between the scores of the positive and negative pixels. How much is this margin?</li>
 </ul>
 </blockquote>
-<p>We can now train the CNN by minimising the objective function with respect to $\bw$ and $b$. We do so by using an algorithm called <em>gradient descent with momentum</em>.  Given the current solution $(\bw_t,b_t)$ and update it , this is updated to $(\bw_{t+1},b_t)$ by following the direction of fastest descent as given by the negative gradient $-\nabla E(\bw_t,b_t)$ of the objective. However, gradient updates are smoothed by considering a <em>momentum</em> term $(\bar\bw_{t}, \bar\mu_t)$, yielding the update equations
-$$
+<p>We can now train the CNN by minimising the objective function with respect to <mathjax>$\bw$</mathjax> and <mathjax>$b$</mathjax>. We do so by using an algorithm called <em>gradient descent with momentum</em>.  Given the current solution <mathjax>$(\bw_t,b_t)$</mathjax> and update it , this is updated to <mathjax>$(\bw_{t+1},b_t)$</mathjax> by following the direction of fastest descent as given by the negative gradient <mathjax>$-\nabla E(\bw_t,b_t)$</mathjax> of the objective. However, gradient updates are smoothed by considering a <em>momentum</em> term <mathjax>$(\bar\bw_{t}, \bar\mu_t)$</mathjax>, yielding the update equations
+<mathjax>$$
  \bar\bw_{t+1} \leftarrow \mu \bar\bw_t + \eta \frac{\partial E}{\partial \bw_t},
  \qquad
  \bw_{t+1} \leftarrow \bw_{t} - \bar\bw_t.
-$$
-and similarly for the bias term. Here $\mu$ is the <em>momentum rate</em> and $\eta$ the <em>learning rate</em>.</p>
+$$</mathjax>
+and similarly for the bias term. Here <mathjax>$\mu$</mathjax> is the <em>momentum rate</em> and <mathjax>$\eta$</mathjax> the <em>learning rate</em>.</p>
 <blockquote>
 <p><strong>Questions:</strong></p>
 <ul>
@@ -557,7 +571,7 @@ plotPeriod = 10 ;
 <li>If so, can you figure out what "went wrong"?</li>
 <li>Look carefully at the output of the first layer, magnifying with the loupe tool. Is the maximal filter response attained in the middle of each blob?</li>
 </ul>
-<p><strong>Hint:</strong> The Laplacian of Gaussian operator responds maximally at the centre of a blob only if the latter matches the blob size. Relate this fact to the combination of pre-smoothing the image and applying the learned $3\times 3$ filter.</p>
+<p><strong>Hint:</strong> The Laplacian of Gaussian operator responds maximally at the centre of a blob only if the latter matches the blob size. Relate this fact to the combination of pre-smoothing the image and applying the learned <mathjax>$3\times 3$</mathjax> filter.</p>
 </blockquote>
 <p>Now restore the smoothing but switch off subtracting the median from the input image.</p>
 <blockquote>
@@ -567,7 +581,7 @@ plotPeriod = 10 ;
 <li>Reduce a hundred-fold the learning are and increase the maximum number of iterations by an equal amount. Does it get better?</li>
 <li>Explain why adding a constant to the input image can have such a dramatic effect on the performance of the optimisation.</li>
 </ul>
-<p><strong>Hint:</strong> What constraint should the filter $\bw$ satisfy if the filter output should be zero when (i) the input image is zero or (ii) the input image is a large constant? Do you think that it would be easy for gradient descent to enforce (ii) at all times?</p>
+<p><strong>Hint:</strong> What constraint should the filter <mathjax>$\bw$</mathjax> satisfy if the filter output should be zero when (i) the input image is zero or (ii) the input image is a large constant? Do you think that it would be easy for gradient descent to enforce (ii) at all times?</p>
 </blockquote>
 <p>What you have just witnessed is actually a fairly general principle: centring the data usually makes learning problems much better conditioned.</p>
 <p>Now we will explore several parameters in the algorithms:</p>
@@ -598,7 +612,7 @@ ans =
       set: [1x24206 double]
 </code></pre>
 
-<p>These are stored as the array <code>imdb.images.id</code> is a 24,206-dimensional vector of numeric IDs for each of the 24,206 character images in the dataset. <code>imdb.images.data</code> contains a $32 \times 32$ image for each character, stored as a slide of a $32\times 32\times 24,!206$-dimensional array. <code>imdb.images.label</code> is a vector of image labels, denoting which one of the 26 possible characters it is. <code>imdb.images.set</code> is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.</p>
+<p>These are stored as the array <code>imdb.images.id</code> is a 29,198-dimensional vector of numeric IDs for each of the 29,198  character images in the dataset. <code>imdb.images.data</code> contains a <mathjax>$32 \times 32$</mathjax> image for each character, stored as a slide of a <mathjax>$32\times 32\times 29,\!198$</mathjax>-dimensional array. <code>imdb.images.label</code> is a vector of image labels, denoting which one of the 26 possible characters it is. <code>imdb.images.set</code> is equal to 1 for each image that should be used to train the CNN and to 2 for each image that should be used for validation.</p>
 <p><img height=400px src="images/chars.png" alt="cover"/></p>
 <blockquote>
 <p><strong>Task:</strong> look at the Figure 1 generated by the code and at the code itself and make sure that you understand what you are looking at.</p>
@@ -614,15 +628,15 @@ ans =
 </blockquote>
 <p>Note that the <em>penultimate</em> layer has 26 output dimensions, one for each character. Character recognition looks at the maximal output to identify which character is processed by the network.</p>
 <p>However, the last network layer is <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnsoftmaxloss/"><code>vl_nnsoftmaxloss</code></a>, which in turn is a combination of the <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnsoftmax/"><code>vl_nnsoftmax</code></a> function and of the classification log-loss <a href="http://www.vlfeat.org/matconvnet/mfiles/vl_nnloss/"><code>vl_nnloss</code></a>. The <em>softmax</em> operator is given by
-$$
+<mathjax>$$
   y_{ijk'} = \frac{e^{x_{ijk'}}}{\sum_{k} e^{x_{ijk}}}
-$$
+$$</mathjax>
 whereas the <em>log-loss</em> is given by
-$$
+<mathjax>$$
   y_{ij} = - \log x_{ij c_{ij}}
-$$
-where $c_{ij}$ is the index of the ground-truth class at spatial location $(i,j)$.</p>
-<p><strong>Remark:</strong> While in MatConvNet all operators are convolutional, in this case the network is configured such that the output of the classification layer is a $1 \times 1 \times 26$-dimensional feature map, i.e. there remains only one spatial location.</p>
+$$</mathjax>
+where <mathjax>$c_{ij}$</mathjax> is the index of the ground-truth class at spatial location <mathjax>$(i,j)$</mathjax>.</p>
+<p><strong>Remark:</strong> While in MatConvNet all operators are convolutional, in this case the network is configured such that the output of the classification layer is a <mathjax>$1 \times 1 \times 26$</mathjax>-dimensional feature map, i.e. there remains only one spatial location.</p>
 <blockquote>
 <p><strong>Tasks:</strong></p>
 <ol>
@@ -662,7 +676,7 @@ im = 256 * reshape(im, 32, 32, 1, []) ;
 labels = imdb.images.label(1,batch) ;
 </code></pre>
 
-<p>The function extracts the $m$ images corresponding to the vector of indexes <code>batch</code>. It also reshape them as a $32\times 32\times 1\times m$ array (as this is the format expected by the MatConvNet functions) and multiplies the values by 256 (the resulting values match the network initialisation and learning parameters). Finally, it also returns a vector of labels, one for each image in the batch.</p>
+<p>The function extracts the <mathjax>$m$</mathjax> images corresponding to the vector of indexes <code>batch</code>. It also reshape them as a <mathjax>$32\times 32\times 1\times m$</mathjax> array (as this is the format expected by the MatConvNet functions) and multiplies the values by 256 (the resulting values match the network initialisation and learning parameters). Finally, it also returns a vector of labels, one for each image in the batch.</p>
 <blockquote>
 <p><strong>Task:</strong> Run the learning code and examine the plots that are produced. As training completes answer the following questions:</p>
 <ol>
@@ -706,7 +720,7 @@ res = vl_simplenn(net, im) ;
 </code></pre>
 
 <blockquote>
-<p><strong>Question:</strong> The image is much wider than 32 pixels. Why can you apply to it the CNN learned before for $32\times 32$ patches?</p>
+<p><strong>Question:</strong> The image is much wider than 32 pixels. Why can you apply to it the CNN learned before for <mathjax>$32\times 32$</mathjax> patches?</p>
 <p><strong>Task:</strong> examine the size of the CNN output using <code>size(res(end).x)</code>. Does this match your expectation?</p>
 </blockquote>
 <p>Now use the <code>decodeCharacters()</code>  function to visualise the results:</p>
@@ -726,7 +740,7 @@ decodeCharacters(net, imdb, im, res) ;
 <p>A key issue with the previous CNN is that it is not trained to recognise characters in the context of other characters. Furthermore, characters are perfectly centred in the patch. We can relax these assumptions by making the training data "more realistic". In this part we will train a second network applying <em>data jittering</em> by:</p>
 <ol>
 <li>Randomly adding a character to the left and to the right of the one recognised and</li>
-<li>Randomly shifting the characters by up to $\pm 5$ pixels horizontally and $\pm 2$ pixels vertically.</li>
+<li>Randomly shifting the characters by up to <mathjax>$\pm 5$</mathjax> pixels horizontally and <mathjax>$\pm 2$</mathjax> pixels vertically.</li>
 </ol>
 <p>This is implemented by the <code>getBatchWithJitter()</code>  function (note that jittering is applied on the fly as it is so fast).</p>
 <blockquote>
@@ -824,8 +838,28 @@ title(sprintf('%s (%d), score %.3f',...
 <hr />
 <ol>
 <li id="fn:lattice">
-<p>A two-dimensional <em>lattice</em> is a discrete grid embedded in $R^2$, similar for example to a checkerboard.&#160;<a class="footnote-backref" href="#fnref:lattice" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<p>A two-dimensional <em>lattice</em> is a discrete grid embedded in <mathjax>$R^2$</mathjax>, similar for example to a checkerboard.&#160;<a class="footnote-backref" href="#fnref:lattice" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 </ol>
-</div></body>
+</div><script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true
+    },
+  "HTML-CSS": { availableFonts: ["TeX"] },
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+  });
+if (typeof MathJaxListener !== 'undefined') {
+  MathJax.Hub.Register.StartupHook('End', function () {
+    MathJaxListener.invokeCallbackForKey_('End');
+  });
+}
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/javascript" src="prism.js"></script>
+</body>
 </html>

@@ -113,18 +113,18 @@ figure(1) ; clf ; imagesc(x)
 <blockquote>
 <p><strong>Question.</strong> The third dimension of <code>x</code> is 3. Why?</p>
 </blockquote>
-<p>Now we will create a bank 10 of $5 \times 5 \times 3$ filters.</p>
+<p>Next, we create a bank of 10 filters of dimension $5 \times 5 \times 3$, initialising their coefficients randomly:</p>
 <pre><code class="language-matlab">% Create a bank of linear filters
 w = randn(5,5,3,10,'single') ;
 </code></pre>
 
-<p>The filters are in single precision as well. Note that <code>w</code> has four dimensions, packing 10 filters. Note also that each filter is not flat, but rather a volume with three layers. The next step is applying the filter to the image. This uses the <code>vl_nnconv</code> function from MatConvNet:</p>
+<p>The filters are in single precision as well. Note that <code>w</code> has four dimensions, packing 10 filters. Note also that each filter is not flat, but rather a volume containing three slices. The next step is applying the filter to the image. This uses the <code>vl_nnconv</code> function from MatConvNet:</p>
 <pre><code class="language-matlab">% Apply the convolution operator
 y = vl_nnconv(x, w, []) ;
 </code></pre>
 
 <p><strong>Remark:</strong> You might have noticed that the third argument to the <code>vl_nnconv</code> function is the empty matrix <code>[]</code>. It can be otherwise used to pass a vector of bias terms to add to the output of each filter.</p>
-<p>The variable <code>y</code> contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map $\bx$ with $K$ channels. Furthermore, there are $K'$ such filters, generating a $K'$ dimensional map $\by$ as follows
+<p>The variable <code>y</code> contains the output of the convolution. Note that the filters are three-dimensional. This is because they operate on a tensor $\bx$ with $K$ channels. Furthermore, there are $K'$ such filters, generating a $K'$ dimensional map $\by$ as follows:
 <script type="math/tex; mode=display">
 y_{i'j'k'} = \sum_{ijk} w_{ijkk'} x_{i+i',j+j',k}
 </script>
@@ -287,7 +287,7 @@ where $\eta_t \in \mathbb{R}_+$ is the <em>learning rate</em>.</p>
  \bx_L
 </script>
 During learning, the last layer of the network is the <em>loss function</em> that should be minimized. Hence, the output $\bx_L = x_L$ of the network is a <strong>scalar</strong> quantity (a single number).</p>
-<p>The gradient is easily computed using using the <strong>chain rule</strong>. If <em>all</em> network variables and parameters are scalar, this is given by[^derivative]:
+<p>The gradient is easily computed using using the <strong>chain rule</strong>. If <em>all</em> network variables and parameters are scalar, this is given by:
 <script type="math/tex; mode=display">
  \frac{\partial f}{\partial w_l}(x_0;w_1,\dots,w_L)
  =
@@ -302,7 +302,7 @@ With tensors, however, there are some complications. Consider for instance the d
 <blockquote>
 <p><strong>Question:</strong> The output derivatives have the same size as the parameters in the network. Why?</p>
 </blockquote>
-<p><strong>Back-propagation</strong> allows computing the output derivatives in a memory-efficient manner. To see how, the first step is to generalize the equation above to tensors using a matrix notation. This is done by converting tensors into vectors by using the $\vv$ (stacking)[^stacking] operator:
+<p><strong>Back-propagation</strong> allows computing the output derivatives in a memory-efficient manner. To see how, the first step is to generalize the equation above to tensors using a matrix notation. This is done by converting tensors into vectors by using the $\vv$ (stacking)<sup id="fnref:stacking"><a class="footnote-ref" href="#fn:stacking" rel="footnote">2</a></sup> operator:
 <script type="math/tex; mode=display">
  \frac{\partial \vv f}{\partial \vv^\top \bw_l}
  =
@@ -532,7 +532,7 @@ E(\bw,b) =
 <li>Note that the objective enforces a <em>margin</em> between the scores of the positive and negative pixels. How much is this margin?</li>
 </ul>
 </blockquote>
-<p>We can now train the CNN by minimising the objective function with respect to $\bw$ and $b$. We do so by using an algorithm called <em>gradient descent with momentum</em>.  Given the current solution $(\bw_t,b_t)$ and update it , this is updated to $(\bw_{t+1},b_t)$ by following the direction of fastest descent as given by the negative gradient $-\nabla E(\bw_t,b_t)$ of the objective. However, gradient updates are smoothed by considering a <em>momentum</em> term $(\bar\bw_{t}, \bar\mu_t)$, yielding the update equations
+<p>We can now train the CNN by minimising the objective function with respect to $\bw$ and $b$. We do so by using an algorithm called <em>gradient descent with momentum</em>.  Given the current solution $(\bw_t,b_t)$, this is updated to $(\bw_{t+1},b_{t+1})$ by following the direction of fastest descent of the objective $E(\bw_t,b_t)$ as given by the negative gradient $-\nabla E$. However, gradient updates are smoothed by considering a <em>momentum</em> term $(\bar\bw_{t}, \bar\mu_t)$, yielding the update equations
 <script type="math/tex; mode=display">
  \bar\bw_{t+1} \leftarrow \mu \bar\bw_t + \eta \frac{\partial E}{\partial \bw_t},
  \qquad
@@ -558,13 +558,17 @@ plotPeriod = 10 ;
 <p><strong>Tasks:</strong></p>
 <ul>
 <li>Inspect the code in the file  <code>exercise3.m</code>. Convince yourself that the code is implementing the algorithm described above. Pay particular attention at the forward and backward passes as well as at how the objective function and its derivatives are computed.</li>
-<li>Run the algorithm and observe the results. Then answer the following questions:</li>
+<li>Run the algorithm and observe the results. Then answer the following questions:<ul>
 <li>The learned filter should resemble the discretisation of a well-known differential operator. Which one? </li>
 <li>What is the average of the filter values compared to the average of the absolute values?</li>
-<li>Run the algorithm again and observe the evolution of the histograms of the score of the positive and negative pixels in relation to the values 0 and 1. Answer the following:</li>
+</ul>
+</li>
+<li>Run the algorithm again and observe the evolution of the histograms of the score of the positive and negative pixels in relation to the values 0 and 1. Answer the following:<ul>
 <li>Is the objective function minimised monotonically?</li>
 <li>As the histograms evolve, can you identify at least two "phases" in the optimisation?</li>
 <li>Once converged, do the score distribute in the manner that you would expect?</li>
+</ul>
+</li>
 </ul>
 <p><strong>Hint:</strong> the <code>plotPeriod</code> option can be changed to plot the diagnostic figure with a higher or lower frequency; this can significantly affect the speed of the algorithm.</p>
 </blockquote>
@@ -766,17 +770,8 @@ decodeCharacters(net, imdb, im, res) ;
 <p>In MatConvNet this is almost trivial as it builds on the easy-to-use GPU support in MATLAB. You can follow this list of steps to try it out:</p>
 <ol>
 <li>Clear the models generated and cached in the previous steps. To do this, rename or delete the directories <code>data/characters-experiment</code> and <code>data/characters-jit-experiment</code>.</li>
-<li>
-<p>Make sure that MatConvNet is compiled with GPU support. To do this, use</p>
-<p>```matlab</p>
-<blockquote>
-<p>setup('useGpu', true) ;
-```</p>
-</blockquote>
-</li>
-<li>
-<p>Try again training the model of <code>exercise4.m</code> switching to <code>true</code> the <code>useGpu</code> flag.</p>
-</li>
+<li>Make sure that MatConvNet is compiled with GPU support. To do this, use <code>setup('useGpu', true)</code>.</li>
+<li>Try again training the model of <code>exercise4.m</code> switching to <code>true</code> the <code>useGpu</code> flag.</li>
 </ol>
 <blockquote>
 <p><strong>Task:</strong> Follow the steps above and note the speed of training. How many images per second can you process now?</p>
@@ -837,6 +832,7 @@ title(sprintf('%s (%d), score %.3f',...
 </ul>
 <h2 id="history">History</h2>
 <ul>
+<li>Used in the Oxford AIMS CDT, 2016-17.</li>
 <li>Used in the Oxford AIMS CDT, 2015-16.</li>
 <li>Used in the Oxford AIMS CDT, 2014-15.</li>
 </ul>
@@ -845,6 +841,9 @@ title(sprintf('%s (%d), score %.3f',...
 <ol>
 <li id="fn:lattice">
 <p>A two-dimensional <em>lattice</em> is a discrete grid embedded in $R^2$, similar for example to a checkerboard.&#160;<a class="footnote-backref" href="#fnref:lattice" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:stacking">
+<p>The stacking of a tensor $\bx \in\mathbb{R}^{H\times W\times C}$ is the vector <script type="math/tex; mode=display"> \vv \bx= \begin{bmatrix} x_{111}\\ x_{211} \\ \vdots \\ x_{H11} \\ x_{121} \\\vdots \\ x_{HWC} \end{bmatrix}.</script>&#160;<a class="footnote-backref" href="#fnref:stacking" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div><script type="text/x-mathjax-config">

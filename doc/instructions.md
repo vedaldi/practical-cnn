@@ -77,14 +77,14 @@ Use MATLAB `size` command to obtain the size of the array `x`. Note that the arr
 
 > **Question.** The third dimension of `x` is 3. Why?
 
-Now we will create a bank 10 of $5 \times 5 \times 3$ filters.
+Next, we create a bank of 10 filters of dimension $5 \times 5 \times 3$, initialising their coefficients randomly:
 
 ```matlab
 % Create a bank of linear filters
 w = randn(5,5,3,10,'single') ;
 ```
 
-The filters are in single precision as well. Note that `w` has four dimensions, packing 10 filters. Note also that each filter is not flat, but rather a volume with three layers. The next step is applying the filter to the image. This uses the `vl_nnconv` function from MatConvNet:
+The filters are in single precision as well. Note that `w` has four dimensions, packing 10 filters. Note also that each filter is not flat, but rather a volume containing three slices. The next step is applying the filter to the image. This uses the `vl_nnconv` function from MatConvNet:
 
 ```matlab
 % Apply the convolution operator
@@ -93,7 +93,7 @@ y = vl_nnconv(x, w, []) ;
 
 **Remark:** You might have noticed that the third argument to the `vl_nnconv` function is the empty matrix `[]`. It can be otherwise used to pass a vector of bias terms to add to the output of each filter.
 
-The variable `y` contains the output of the convolution. Note that the filters are three-dimensional, in the sense that it operates on a map $\bx$ with $K$ channels. Furthermore, there are $K'$ such filters, generating a $K'$ dimensional map $\by$ as follows
+The variable `y` contains the output of the convolution. Note that the filters are three-dimensional. This is because they operate on a tensor $\bx$ with $K$ channels. Furthermore, there are $K'$ such filters, generating a $K'$ dimensional map $\by$ as follows:
 $$
 y_{i'j'k'} = \sum_{ijk} w_{ijkk'} x_{i+i',j+j',k}
 $$
@@ -270,7 +270,7 @@ $$
 $$
 During learning, the last layer of the network is the *loss function* that should be minimized. Hence, the output $\bx_L = x_L$ of the network is a **scalar** quantity (a single number).
 
-The gradient is easily computed using using the **chain rule**. If *all* network variables and parameters are scalar, this is given by[^derivative]:
+The gradient is easily computed using using the **chain rule**. If *all* network variables and parameters are scalar, this is given by:
 $$
  \frac{\partial f}{\partial w_l}(x_0;w_1,\dots,w_L)
  =
@@ -533,7 +533,7 @@ $$
 > - What can you say about the score of each pixel if $\lambda=0$ and $E(\bw,b) =0$?
 > - Note that the objective enforces a *margin* between the scores of the positive and negative pixels. How much is this margin?
 
-We can now train the CNN by minimising the objective function with respect to $\bw$ and $b$. We do so by using an algorithm called *gradient descent with momentum*.  Given the current solution $(\bw_t,b_t)$ and update it , this is updated to $(\bw_{t+1},b_t)$ by following the direction of fastest descent as given by the negative gradient $-\nabla E(\bw_t,b_t)$ of the objective. However, gradient updates are smoothed by considering a *momentum* term $(\bar\bw_{t}, \bar\mu_t)$, yielding the update equations
+We can now train the CNN by minimising the objective function with respect to $\bw$ and $b$. We do so by using an algorithm called *gradient descent with momentum*.  Given the current solution $(\bw_t,b_t)$, this is updated to $(\bw_{t+1},b_{t+1})$ by following the direction of fastest descent of the objective $E(\bw_t,b_t)$ as given by the negative gradient $-\nabla E$. However, gradient updates are smoothed by considering a *momentum* term $(\bar\bw_{t}, \bar\mu_t)$, yielding the update equations
 $$
  \bar\bw_{t+1} \leftarrow \mu \bar\bw_t + \eta \frac{\partial E}{\partial \bw_t},
  \qquad
@@ -560,12 +560,12 @@ plotPeriod = 10 ;
 > 
 > - Inspect the code in the file  `exercise3.m`. Convince yourself that the code is implementing the algorithm described above. Pay particular attention at the forward and backward passes as well as at how the objective function and its derivatives are computed.
 > - Run the algorithm and observe the results. Then answer the following questions:
->   * The learned filter should resemble the discretisation of a well-known differential operator. Which one? 
->   * What is the average of the filter values compared to the average of the absolute values?
+>     * The learned filter should resemble the discretisation of a well-known differential operator. Which one? 
+>     * What is the average of the filter values compared to the average of the absolute values?
 > - Run the algorithm again and observe the evolution of the histograms of the score of the positive and negative pixels in relation to the values 0 and 1. Answer the following:
->   * Is the objective function minimised monotonically?
->   * As the histograms evolve, can you identify at least two "phases" in the optimisation?
->   * Once converged, do the score distribute in the manner that you would expect?
+>     * Is the objective function minimised monotonically?
+>     * As the histograms evolve, can you identify at least two "phases" in the optimisation?
+>     * Once converged, do the score distribute in the manner that you would expect?
 >
 > **Hint:** the `plotPeriod` option can be changed to plot the diagnostic figure with a higher or lower frequency; this can significantly affect the speed of the algorithm.
 
@@ -794,12 +794,7 @@ A key challenge in deep learning is the sheer amount of computation required to 
 In MatConvNet this is almost trivial as it builds on the easy-to-use GPU support in MATLAB. You can follow this list of steps to try it out:
 
 1. Clear the models generated and cached in the previous steps. To do this, rename or delete the directories `data/characters-experiment` and `data/characters-jit-experiment`.
-2. Make sure that MatConvNet is compiled with GPU support. To do this, use
-
-    ```matlab
-    > setup('useGpu', true) ;
-    ```
-    
+2. Make sure that MatConvNet is compiled with GPU support. To do this, use `setup('useGpu', true)`.
 3. Try again training the model of `exercise4.m` switching to `true` the `useGpu` flag.
 
 > **Task:** Follow the steps above and note the speed of training. How many images per second can you process now?
@@ -875,7 +870,10 @@ That completes this practical.
 
 ## History
 
+* Used in the Oxford AIMS CDT, 2016-17.
 * Used in the Oxford AIMS CDT, 2015-16.
 * Used in the Oxford AIMS CDT, 2014-15.
 
 [^lattice]: A two-dimensional *lattice* is a discrete grid embedded in $R^2$, similar for example to a checkerboard.
+
+[^stacking]: The stacking of a tensor $\bx \in\mathbb{R}^{H\times W\times C}$ is the vector $$ \vv \bx= \begin{bmatrix} x_{111}\\ x_{211} \\ \vdots \\ x_{H11} \\ x_{121} \\\vdots \\ x_{HWC} \end{bmatrix}.$$

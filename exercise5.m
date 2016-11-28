@@ -17,8 +17,8 @@ vl_simplenn_display(net) ;
 % obtain and preprocess an image
 im = imread('peppers.png') ;
 im_ = single(im) ; % note: 255 range
-im_ = imresize(im_, net.normalization.imageSize(1:2)) ;
-im_ = im_ - net.normalization.averageImage ;
+im_ = imresize(im_, net.meta.normalization.imageSize(1:2)) ;
+im_ = bsxfun(@minus, im_, net.meta.normalization.averageImage) ;
 
 % run the CNN
 res = vl_simplenn(net, im_) ;
@@ -28,4 +28,4 @@ scores = squeeze(gather(res(end).x)) ;
 [bestScore, best] = max(scores) ;
 figure(1) ; clf ; imagesc(im) ; axis image ;
 title(sprintf('%s (%d), score %.3f',...
-net.classes.description{best}, best, bestScore)) ;
+net.meta.classes.description{best}, best, bestScore)) ;

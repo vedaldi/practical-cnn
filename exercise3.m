@@ -25,7 +25,7 @@ colormap gray ;
 % -------------------------------------------------------------------------
 
 % Pre-smooth the image
-im = vl_imsmooth(im,3) ;
+im = imsmooth(im,3) ;
 
 % Subtract median value
 im = im - median(im(:)) ;

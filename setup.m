@@ -1,11 +1,12 @@
 function setup(varargin)
 
-run vlfeat/toolbox/vl_setup ;
+%run vlfeat/toolbox/vl_setup ;
 run matconvnet/matlab/vl_setupnn ;
 addpath matconvnet/examples ;
 
 opts.useGpu = false ;
 opts.verbose = false ;
+opts.enableImReadJPEG = false ;
 opts = vl_argparse(opts, varargin) ;
 
 try

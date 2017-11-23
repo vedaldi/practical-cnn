@@ -1,7 +1,7 @@
 # Build practical
 
 name ?= practical-cnn
-ver ?= 2016a
+ver ?= 2017a
 
 code=\
 decodeCharacters.m \

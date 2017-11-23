@@ -56,6 +56,7 @@ pre-built binaries, but MatConvNet does not.
 Changes
 -------
 
+* *2017a* - Removes dependency on VLFeat and upgrades MatConvNet.
 * *2015a* - Initial edition
 
 License

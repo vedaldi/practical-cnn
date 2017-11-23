@@ -1,6 +1,5 @@
 function setup(varargin)
-
-%run vlfeat/toolbox/vl_setup ;
+% SETUP  Add the required search paths to MATLAB
 run matconvnet/matlab/vl_setupnn ;
 addpath matconvnet/examples ;
 

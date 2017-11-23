@@ -24,14 +24,15 @@ files:
 * `exercise5.m` -- Part 5: Using a pretrained CNN
 
 The practical runs in MATLAB and uses
-[MatConvNet](http://www.vlfeat.org/matconvnet) and
-[VLFeat](http://www.vlfeat.org). This package contains the following
-MATLAB functions:
+[MatConvNet](http://www.vlfeat.org/matconvnet).
+This package contains the following MATLAB functions:
 
 * `extractBlackBlobs.m`: extract black blobs from an image.
 * `tinycnn.m`: implements a very simple CNN.
 * `initializeCharacterCNN.m`: initialize a CNN to recognize characters.
 * `decodeCharacters.m`: visualize the output of the character CNN.
+* `imsmooth.m`: apply a Gaussian filter to an image.
+* `vl_imarray.m` and `vl_imarraysc.m`: compose images in a mosaic.
 * `setup.m`: setup MATLAB environment.
 
 Appendix: Installing from scratch

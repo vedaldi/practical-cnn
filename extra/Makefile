@@ -15,7 +15,6 @@ initializeCharacterCNN.m \
 setup.m \
 tinycnn.m \
 README.md \
-vlfeat \
 matconvnet
 
 doc=\

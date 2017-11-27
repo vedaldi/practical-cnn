@@ -42,3 +42,9 @@ if 0
   subplot(1,2,2) ; imagesc(abs(score).^.25) ;
   keyboard
 end
+
+function m = islocalmax(x,dim)
+m  = (circshift(x,1,dim) < x) & (circshift(x,-1,dim) < x) ;
+
+function m = islocalmin(x,dim)
+m = (circshift(x,1,dim) > x) & (circshift(x,-1,dim) > x) ;

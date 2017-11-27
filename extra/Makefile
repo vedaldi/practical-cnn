@@ -10,6 +10,9 @@ exercise2.m \
 exercise3.m \
 exercise4.m \
 exercise5.m \
+vl_imarray.m \
+vl_imarraysc.m \
+imsmooth.m \
 extractBlackBlobs.m \
 initializeCharacterCNN.m \
 setup.m \

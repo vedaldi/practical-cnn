@@ -3,6 +3,9 @@ setup ;
 % -------------------------------------------------------------------------
 % Part 1.1: Linear convolution
 % -------------------------------------------------------------------------
+clc
+close all
+clear all
 
 % Read an example image
 x = imread('peppers.png') ;
@@ -11,7 +14,8 @@ x = imread('peppers.png') ;
 x = im2single(x) ;
 
 % Visualize the input x
-figure(1) ; clf ; imagesc(x) ;
+figure(1) ;clf ;  imagesc(x); title('original image');
+pause
 
 % Create a bank of linear filters
 w = randn(5,5,3,10,'single') ;
@@ -20,15 +24,18 @@ w = randn(5,5,3,10,'single') ;
 y = vl_nnconv(x, w, []) ;
 
 % Visualize the output y
-figure(2) ; clf ; vl_imarraysc(y) ; colormap gray ;
+figure(2) ; clf ; vl_imarraysc(y) ; colormap gray ; title('convolved image');
+pause
 
 % Try again, downsampling the output
 y_ds = vl_nnconv(x, w, [], 'stride', 16) ;
-figure(3) ; clf ; vl_imarraysc(y_ds) ; colormap gray ;
+figure(3) ; clf ; vl_imarraysc(y_ds) ; colormap gray ; title('downsampled image');
+pause
 
 % Try padding
 y_pad = vl_nnconv(x, w, [], 'pad', 4) ;
-figure(4) ; clf ; vl_imarraysc(y_pad) ; colormap gray ;
+figure(4) ;  clf ; vl_imarraysc(y_pad) ; colormap gray ; title('padded image');
+pause
 
 % Manually design a filter
 w = [0  1 0 ;
@@ -39,7 +46,7 @@ y_lap = vl_nnconv(x, w, []) ;
 figure(5) ; clf ; colormap gray ;
 subplot(1,2,1) ; imagesc(y_lap) ; title('filter output') ;
 subplot(1,2,2) ; imagesc(-abs(y_lap)) ; title('- abs(filter output)') ;
-
+pause
 
 % -------------------------------------------------------------------------
 % Part 1.2: Non-linear gating (ReLU)
@@ -51,15 +58,17 @@ y = vl_nnconv(x, w, []) ;
 z = vl_nnrelu(y) ;
 
 figure(6) ; clf ; colormap gray ;
-subplot(1,2,1) ; vl_imarraysc(y) ;
-subplot(1,2,2) ; vl_imarraysc(z) ;
+subplot(1,2,1) ; vl_imarraysc(y) ;  title('convolved') ;
+subplot(1,2,2) ; vl_imarraysc(z) ;  title('relu') ;
+pause
 
 % -------------------------------------------------------------------------
 % Part 1.2: Pooling
 % -------------------------------------------------------------------------
 
 y = vl_nnpool(x, 15) ;
-figure(7) ; clf ; imagesc(y) ;
+figure(7) ; clf ; imagesc(y) ; title('pooling') ;
+pause
 
 % -------------------------------------------------------------------------
 % Part 1.3: Normalization
@@ -70,4 +79,7 @@ kappa = 0 ;
 alpha = 1 ;
 beta = 0.5 ;
 y_nrm = vl_nnnormalize(x, [rho kappa alpha beta]) ;
-figure(8) ; clf ; imagesc(y_nrm) ;
+figure(8) ; clf ; imagesc(y_nrm) ; title('normalization') ;
+pause
+disp('done.');
+

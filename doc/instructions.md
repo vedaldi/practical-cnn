@@ -595,14 +595,14 @@ What you have just witnessed is actually a fairly general principle: centring th
 
 Now we will explore several parameters in the algorithms:
 
-> **Task:** Restore the preprocessing as given in `experiment4.m`.  Try the following:
+> **Task:** Restore the preprocessing as given in `experiment3.m`.  Try the following:
 >
 > * Try increasing the learning rate `eta`. Can you achieve a better value of the energy in the 500 iterations?
 > * Disable momentum by setting `momentum = 0`. Now try to beat the result obtained above by choosing `eta`. Can you succeed?
 
 Finally, consider the regularisation effect of shrinking:
 
-> **Task:** Restore the learning rate and momentum as given in `experiment4.m`. Then increase the shrinkage factor tenfold and a hundred-fold.
+> **Task:** Restore the learning rate and momentum as given in `experiment3.m`. Then increase the shrinkage factor tenfold and a hundred-fold.
 > 
 > - What is the effect on the convergence speed?
 > - What is the effect on the final value of the total objective function and of the average loss part of it?

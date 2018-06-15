@@ -204,7 +204,7 @@ The function `vl_nnpool` supports subsampling and padding just like `vl_nnconv`.
 
 Another important CNN building block is channel-wise normalisation. This operator normalises the vector of feature channels at each spatial location in the input map $\bx$. The form of the normalisation operator is actually rather curious:
 $$
-  y_{ijk'} = \frac{x_{ijk}}{\left(\kappa + \alpha \sum_{k\in G(k')}  x_{ijk}^2\right)^{\beta}}
+  y_{ijk} = \frac{x_{ijk}}{\left(\kappa + \alpha \sum_{k'\in G(k)}  x_{ijk'}^2\right)^{\beta}}
 $$
 where $G(k) = \left[k - \lfloor \frac{\rho}{2} \rfloor, k + \lceil \frac{\rho}{2} \rceil\right] \cap \{1, 2, \dots, K\}$ is a group of $\rho$ consecutive feature channels in the input map.
 

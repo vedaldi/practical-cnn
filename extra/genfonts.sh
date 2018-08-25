@@ -22,9 +22,14 @@ then
 fi
 
 # Only get the fonts that have latin-ext encoding
-fontFamilies=$(grep latin-ext "$googleFontDir"/ofl/*/METADATA.pb | \
+fontFamilies=$(grep -l latin-ext "$googleFontDir"/ofl/*/METADATA.pb | \
     sed -E 's#.*ofl/([a-zA-Z0-9]+)/METADATA.*#\1#g')
-echo -n "Found" $(echo "$fontFamilies" | wc -l) "latin font families "
+
+# Sitara is broken so get it out
+fontFamilies=$(echo $fontFamilies | sed 's/sitara //')
+
+# Show what you got
+echo -n "Found" $(echo "$fontFamilies" | wc -w) "latin font families "
 echo "out of" $(ls $googleFontDir/ofl/*/METADATA.pb | wc -l)
 
 fonts=""

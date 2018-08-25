@@ -4,12 +4,12 @@ Convolutional neural network practical
 A computer vision practical by the Oxford Visual Geometry group,
 authored by Andrea Vedaldi and Andrew Zisserman.
 
-Start from `doc/instructions.html`.
+This practical requires PyTorch and a number of other Python dependencies, such as MatPlotLib, NumPy, and PIL. The easiest way of installing all that is to install [Anaconda](https://www.anaconda.com/download/) for Python 3.6 and then to use the following commands:
 
-> Note that this practical requires compiling the (included)
-> MatConvNet library. This should happen automatically (see the
-> `setup.m` script), but make sure that the compilation succeeds on
-> the laboratory computers.
+      conda env create -f practical.yaml
+      conda activate practical
+      jupyter notebook practical.ipynb
+
 
 Package contents
 ----------------
@@ -17,23 +17,8 @@ Package contents
 The practical consists of four exercises, organized in the following
 files:
 
-* `exercise1.m` -- Part 1: CNN fundamentals
-* `exercise2.m` -- Part 2: Derivatives and backpropagation
-* `exercise3.m` -- Part 3: Learning a tiny CNN
-* `exercise4.m` -- Part 4: Learning a CNN to recognize characters
-* `exercise5.m` -- Part 5: Using a pretrained CNN
-
-The practical runs in MATLAB and uses
-[MatConvNet](http://www.vlfeat.org/matconvnet).
-This package contains the following MATLAB functions:
-
-* `extractBlackBlobs.m`: extract black blobs from an image.
-* `tinycnn.m`: implements a very simple CNN.
-* `initializeCharacterCNN.m`: initialize a CNN to recognize characters.
-* `decodeCharacters.m`: visualize the output of the character CNN.
-* `imsmooth.m`: apply a Gaussian filter to an image.
-* `vl_imarray.m` and `vl_imarraysc.m`: compose images in a mosaic.
-* `setup.m`: setup MATLAB environment.
+* `practical.ipynb` -- The Python Jupyter practical
+* `lab.py` -- Supporting Python code
 
 Appendix: Installing from scratch
 ---------------------------------
@@ -57,8 +42,9 @@ pre-built binaries, but MatConvNet does not.
 Changes
 -------
 
+* *2018a* - Rewrite for PyTorch.
 * *2017a* - Removes dependency on VLFeat and upgrades MatConvNet.
-* *2015a* - Initial edition
+* *2015a* - Initial edition.
 
 License
 -------

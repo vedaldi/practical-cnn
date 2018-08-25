@@ -1,0 +1,11 @@
+name: practical
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - jupyter
+  - numpy
+  - matplotlib
+  - pytorch=0.4.0
+  - torchvision=0.2.1  
+  - pillow

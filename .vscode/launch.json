@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: test.py",
+            "type": "python",
+            "request": "launch",
+            "pythonPath": "/Users/vedaldi/miniconda3/envs/deep/bin/pythonw", 
+            "program": "${workspaceFolder}/test.py"
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: pretrain_models.py",
+            "type": "python",
+            "request": "launch",
+            "pythonPath": "/Users/vedaldi/miniconda3/envs/deep/bin/pythonw", 
+            "module": "extra.pretrain_models",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: pack_fonts",
+            "type": "python",
+            "request": "launch",
+            "pythonPath": "/Users/vedaldi/miniconda3/envs/deep/bin/python", 
+            "module": "extra.pack_fonts",
+            "console": "integratedTerminal"
+        },
+    ]
+}

@@ -16,3 +16,4 @@ doc/prism.js
 extra/fonts*
 extra/googlefontdirectory
 vlfeat/
+alexnet.pth

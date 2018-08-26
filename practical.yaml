@@ -11,3 +11,4 @@ dependencies:
   - torchvision=0.2.1  
   - pillow
   - imagemagick
+  - nbstripout

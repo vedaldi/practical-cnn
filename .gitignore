@@ -8,7 +8,7 @@ data/chars-*experiment*
 data/charsdb.pth
 data/imagenet-vgg-verydeep-16.mat
 data/matconvnet*
-data/model*
+data/charscnn*
 data/practical-cnn-*
 data/sentence-lato.png
 doc/prism.css

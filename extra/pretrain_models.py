@@ -25,11 +25,13 @@ im_mean = imdb['images'].mean()
 imdb['images'].sub_(im_mean)
 
 # Train model without jitter
+gpu = torch.cuda.is_available()
 model = new_model()
-lab.train_model(model, imdb)
+model = lab.train_model(model, imdb, use_gpu=gpu)
 torch.save(model.state_dict(), os.path.join('data','charscnn.pth'))
 
 # Train model with jitter
+gpu = torch.cuda.is_available()
 model_jitter = new_model()
-lab.train_model(model_jitter, imdb, jitter=lab.jitter)
+model = lab.train_model(model_jitter, imdb, use_gpu=gpu, jitter=lab.jitter)
 torch.save(model_jitter.state_dict(), os.path.join('data','charscnn_jitter.pth'))

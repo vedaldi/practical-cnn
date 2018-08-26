@@ -27,12 +27,14 @@ The practical requires both VLFeat and MatConvNet. VLFeat comes with
 pre-built binaries, but MatConvNet does not.
 
 1. Set the current directory to the practical base directory.
+2. Install the Conda environment as explained above, then activate it with
+   `conda activate practical`.
 2. Run `./extra/genfonts.sh`. This will download the Google Fonts
   and extract them as PNG files in `./extra/fonts`.
 3. Run `./extra/genstring.sh`. This will create
   `data/sentence-lato.png`.
-4. Run `conda activate practical ; python -m extra.pack_fonts`. This will create `data/charsdb.pth`.
-5. Run `conda activate practical ; python -m extra.pretrain_models`. This will create `data/model*.pth` and `data/alexnet.pth`.
+4. Run `python -m extra.pack_fonts`. This will create `data/charsdb.pth`.
+5. Run `python -m extra.pretrain_models`. This will create `data/model*.pth` and `data/alexnet.pth`.
 
 Changes
 -------
@@ -44,7 +46,7 @@ Changes
 License
 -------
 
-    Copyright (c) 2015 Andrea Vedaldi
+    Copyright (c) 2015-18 Andrea Vedaldi
     
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation

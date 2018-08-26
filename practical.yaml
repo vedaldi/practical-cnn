@@ -1,6 +1,7 @@
 name: practical
 channels:
   - pytorch
+  - conda-forge
   - defaults
 dependencies:
   - jupyter
@@ -9,3 +10,4 @@ dependencies:
   - pytorch=0.4.0
   - torchvision=0.2.1  
   - pillow
+  - imagemagick

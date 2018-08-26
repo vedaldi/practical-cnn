@@ -1,7 +1,7 @@
 # Build practical
 
 name ?= practical-cnn
-ver ?= 2018a
+ver ?= pytorch-2018a
 
 code=\
 practica.pipynb \
@@ -13,11 +13,13 @@ doc/images \
 doc/instructions.html
 
 data=\
-data/dots.jpg \
-data/sentence-lato.png \
-data/charsdb.pth \
 data/alexnet.pth \
+data/charscnn_jitter.pth \
 data/charscnn.pth \
-data/charscnn_jitter.pth
+data/charsdb.pth \
+data/dots.jpg \
+data/imnet_classes.json \
+data/peppers.png \
+data/sentence-lato.png
 
 include extra/practical/Makefile

@@ -10,13 +10,13 @@ torch.save(model.state_dict(), os.path.join('data','alexnet.pth'))
 
 def new_model():
     return nn.Sequential(
-        nn.Conv2d(1,20,5,bias=True),
+        nn.Conv2d(1,20,5),
         nn.MaxPool2d(2,stride=2),
-        nn.Conv2d(20,50,5,bias=True),
+        nn.Conv2d(20,50,5),
         nn.MaxPool2d(2,stride=2),
-        nn.Conv2d(50,500,4,bias=True),
+        nn.Conv2d(50,500,4),
         nn.ReLU(),
-        nn.Conv2d(500,26,2,bias=True),
+        nn.Conv2d(500,26,2),
     )
 
 # Load data

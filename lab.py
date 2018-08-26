@@ -126,8 +126,8 @@ def accuracy(prediction, target):
         correct = predc.t().eq(target).to(torch.float32)
         return correct.mean()
 
-def train_model(model, imdb, batch_size=100, num_epochs=15, jitter=lambda x: x):
-    """Train a model using SGD.
+def train_model(model, imdb, batch_size=100, num_epochs=15, use_gpu=False, jitter=lambda x: x):
+    """Train a model using SGD.    
 
     Arguments:
         model {Torch module} -- The model to train.
@@ -136,7 +136,11 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, jitter=lambda x: x):
     Keyword Arguments:
         batch_size {int} -- Batch size. (default: {100})
         num_epochs {int} -- Number of epochs. (default: {15})
+        use_gpu {bool} -- Whether to use the GPU. (default: {False})
         jitter {function} -- Jitter function (default: {identity})
+
+    Returns:
+       model {Torch module} -- The trained model. Might be different from the input.
     """
 
     print_period = 50
@@ -157,6 +161,10 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, jitter=lambda x: x):
     val_loss_log = []
     val_acc_log = []
 
+    # Send model to GPU if needed
+    device = torch.device("cuda" if use_gpu else "cpu")
+    model = model.to(device)
+
     for epoch in range(num_epochs):
         print(f"beginning epoch {epoch} of {num_epochs}")
         train_items = 0
@@ -169,10 +177,16 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, jitter=lambda x: x):
         perm = np.random.permutation(train)
         num_iter = math.ceil(len(perm) / batch_size)
         for iter, batch in enumerate(get_batch(batch_size, perm)):
-            # Evaluate network and loss
+            # Get images and labels
             x = imdb['images'][batch,]
             c = imdb['labels'][batch,]
+
+            # Jitter images
             x = jitter(x)
+
+            # Send to GPU if needed
+            x = x.to(device) 
+            c = c.to(device)
 
             y = model(x)
             y = y.reshape(y.shape[:2])
@@ -202,8 +216,14 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, jitter=lambda x: x):
         for iter, batch in enumerate(get_batch(batch_size, val)):
             # Evaluate network and loss
             with torch.no_grad():
+                # Get images and labels
                 x = imdb['images'][batch,]
                 c = imdb['labels'][batch,]
+
+                # Send to GPU if needed
+                x = x.to(device) 
+                c = c.to(device)
+
                 y = model(x)
                 y = y.reshape(y.shape[:2])
                 z = loss(y, c)
@@ -236,6 +256,9 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, jitter=lambda x: x):
         plt.plot(val_acc_log,'--')
         plt.legend(('training', 'validation'),)
         plt.pause(1e-5)
+
+    model = model.to(torch.device("cpu"))
+    return model
 
 def jitter(x):
     "Apply jitter to the batch of characters `x`."

@@ -28,7 +28,7 @@ pre-built binaries, but MatConvNet does not.
 
 1. Set the current directory to the practical base directory.
 2. Run `./extra/genfonts.sh`. This will download the Google Fonts
-  and extract them as PNG files.
+  and extract them as PNG files in `./extra/fonts`.
 3. Run `./extra/genstring.sh`. This will create
   `data/sentence-lato.png`.
 4. Run `conda activate practical ; python -m extra.pack_fonts`. This will create `data/charsdb.pth`.

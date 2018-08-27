@@ -36,6 +36,9 @@ pre-built binaries, but MatConvNet does not.
 4. Run `python -m extra.pack_fonts`. This will create `data/charsdb.pth`.
 5. Run `python -m extra.pretrain_models`. This will create `data/model*.pth` and `data/alexnet.pth`.
 
+For developers, it is also recommended to install the `nbstripout` command 
+in git using `nbstripout --install`.
+
 Changes
 -------
 

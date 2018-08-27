@@ -23,3 +23,9 @@ data/peppers.png \
 data/sentence-lato.png
 
 include extra/practical/Makefile
+
+clean: nbstripout
+
+.PHONY: nbstripout
+nbstripout:
+	nbstripout -f practical.ipynb

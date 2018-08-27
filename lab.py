@@ -96,7 +96,6 @@ def imarraysc(tiles, spacing=0, quiet=False):
           u*(w+spacing) : u*(w+spacing)+w] = imsc(tiles[t], quiet=True)[0]
     return imsc(mosaic, quiet=quiet)
 
-
 def extract_black_blobs(im):
     """Extract the dark blobs from an image.
 

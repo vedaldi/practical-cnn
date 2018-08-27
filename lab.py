@@ -9,11 +9,25 @@ from matplotlib import pyplot as plt
 from PIL import Image
 
 def t2im(x):
-    """Rearrange the N x K x H x W to have shape (NK) x 1 x H x W."""
+    """Rearrange the N x K x H x W to have shape (NK) x 1 x H x W.
+
+    Arguments:
+        x {torch.Tensor} -- A N x K x H x W tensor.
+
+    Returns:
+        torch.Tensor -- A (NK) x 1 x H x W tensor.
+    """
     return x.reshape(-1, *x.shape[2:])[:,None,:,:]
 
 def imread(file):
-    """Read the image `file` as a PyTorch tensor."""
+    """Read the image `file` as a PyTorch tensor.
+
+    Arguments:
+        file {str} -- The path to the image.
+
+    Returns:
+        torch.Tensor -- The image read as a 3 x H x W tensor in the [0, 1] range.
+    """
     # Read an example image as a NumPy array
     x = Image.open(file)
     x = np.array(x)
@@ -22,20 +36,48 @@ def imread(file):
     return torch.tensor(x, dtype=torch.float32).permute(2,0,1)[None,:]/255
 
 def imsc(im, *args, quiet=False, **kwargs):
-    """Plot the PyTorch tensor `im` with dimension 3 x H x W or 1 x H x W as an image."""
+    """Rescale and plot an image represented as a PyTorch tensor.
+
+     The function scales the input tensor im to the [0 ,1] range.
+
+    Arguments:
+        im {torch.Tensor} -- A 3 x H x W or 1 x H x W tensor.
+
+    Keyword Arguments:
+        quiet {bool} -- Do not plot. (default: {False})
+
+    Returns:
+        torch.Tensor -- The rescaled image tensor.
+    """
+    handle = None
     with torch.no_grad():
         im = im - im.min() # make a copy
         im.mul_(1/im.max())
         if not quiet:
             bitmap = im.expand(3, *im.shape[1:]).permute(1,2,0).numpy()
-            plt.imshow(bitmap, *args, **kwargs)
+            handle = plt.imshow(bitmap, *args, **kwargs)
             ax = plt.gca()
             ax.axis('off')
             ax.set_xticklabels([])
             ax.set_yticklabels([])
-    return im
+    return im, handle
 
 def imarraysc(tiles, spacing=0, quiet=False):
+    """Plot the PyTorch tensor `tiles` with dimesion N x C x H x W as a C x (MH) x (NW) mosaic.
+
+    The range of each image is individually scaled to the range [0, 1].
+
+    Arguments:
+        tiles {[type]} -- [description]
+
+    Keyword Arguments:
+        spacing {int} -- Thickness of the border (infilled with zeros) around each tile (default: {0})
+        quiet {bool} -- Do not plot the mosaic. (default: {False})
+
+    Returns:
+        torch.Tensor -- The mosaic as a PyTorch tensor.
+    """
+    handle = None
     num = tiles.shape[0]
     num_cols = math.ceil(math.sqrt(num))
     num_rows = (num + num_cols - 1) // num_cols
@@ -51,13 +93,21 @@ def imarraysc(tiles, spacing=0, quiet=False):
         tile = tiles[t]
         mosaic[0:c,
           v*(h+spacing) : v*(h+spacing)+h,
-          u*(w+spacing) : u*(w+spacing)+w] = imsc(tiles[t], quiet=True)
-    if not quiet:
-        imsc(mosaic)
-    return mosaic
+          u*(w+spacing) : u*(w+spacing)+w] = imsc(tiles[t], quiet=True)[0]
+    return imsc(mosaic, quiet=quiet)
+
 
 def extract_black_blobs(im):
-    "Find the dark blobs in an image."
+    """Extract the dark blobs from an image.
+
+    Arguments:
+        im {torch.Tensor} -- Image as a 1 x 1 x W x H PyTorch tensor.
+
+    Returns:
+        torch.Tensor -- An indicator tensor for the pixels centered on a dark blob.
+        torch.Tensor -- An indicator tensor for the pixels away from any dark blob.
+        torch.Tensor -- A pair of (u,v) tensor with the coordinates of the dark blobs.
+    """
     with torch.no_grad():
         score = hessiandet(im)
         ismax = (score == F.max_pool2d(score, 3, padding=1, stride=1)) * (score > 3e-4)
@@ -75,7 +125,7 @@ def extract_black_blobs(im):
     return pos, neg, indices
 
 def imsmooth(im, sigma=2.5):
-    """Applies the determinant of Hessian filter to the gray-scale image `im`."""
+    "Apply a Gaussian filter of standard deviation `sigma` to the image `im`."
     with torch.no_grad():
         m = math.ceil(sigma * 2)
         u = np.linspace(-m, m, 2*m+1, dtype=np.float32)
@@ -106,7 +156,7 @@ def hessiandet(im):
     return score
 
 def jitter(x):
-    "Apply jitter to the batch of characters `x`."
+    "Apply jitter to the N x 1 x 32 x 32 torch.Tensor `x` representing a batch of character images."
     with torch.no_grad():
         perm1 = np.random.permutation(x.shape[0])
         perm2 = np.random.permutation(x.shape[0])
@@ -117,21 +167,29 @@ def jitter(x):
         su = [u + du for u in range(16,48)]
         sv = [max(0, min(v + dv, 31)) for v in range(0,32)]
         s =  np.ix_(sv,su)
-    return x_
-    #return x_[:,:,s[0],s[1]]
+    return x_[:,:,s[0],s[1]]
 
 def accuracy(prediction, target):
+    """Comptute classification accuracy.
+
+    Arguments:
+        prediction {torch.Tensor} -- A N x C tensor of prediction scores.
+        target {torch.Tensor]} -- A N tensor of ground-truth classes.
+
+    Returns:
+        torch.Tensor -- A scalar tensor with the fraction of instances correctly predicted.
+    """
     with torch.no_grad():
         _, predc = prediction.topk(1, 1, True, True)
         correct = predc.t().eq(target).to(torch.float32)
         return correct.mean()
 
 def train_model(model, imdb, batch_size=100, num_epochs=15, use_gpu=False, jitter=lambda x: x):
-    """Train a model using SGD.    
+    """Train a model using SGD.
 
     Arguments:
-        model {Torch module} -- The model to train.
-        imdb {imdb structure} -- The data to train the model from.
+        model {torch.Module} -- The model to train.
+        imdb {dict} -- `imdb` image database with the training data.
 
     Keyword Arguments:
         batch_size {int} -- Batch size. (default: {100})
@@ -140,7 +198,7 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, use_gpu=False, jitte
         jitter {function} -- Jitter function (default: {identity})
 
     Returns:
-       model {Torch module} -- The trained model. Might be different from the input.
+       model {torch.Module} -- The trained model. Might be different from the input.
     """
 
     print_period = 50
@@ -185,7 +243,7 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, use_gpu=False, jitte
             x = jitter(x)
 
             # Send to GPU if needed
-            x = x.to(device) 
+            x = x.to(device)
             c = c.to(device)
 
             y = model(x)
@@ -221,7 +279,7 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, use_gpu=False, jitte
                 c = imdb['labels'][batch,]
 
                 # Send to GPU if needed
-                x = x.to(device) 
+                x = x.to(device)
                 c = c.to(device)
 
                 y = model(x)
@@ -260,27 +318,13 @@ def train_model(model, imdb, batch_size=100, num_epochs=15, use_gpu=False, jitte
     model = model.to(torch.device("cpu"))
     return model
 
-def jitter(x):
-    "Apply jitter to the batch of characters `x`."
-    with torch.no_grad():
-        perm1 = np.random.permutation(x.shape[0])
-        perm2 = np.random.permutation(x.shape[0])
-        x_ = torch.cat((x[perm1], x[perm2]), 3)
-        x_[:,:,:,16:48] = torch.min(x_[:,:,:,16:48], x)
-        du = random.randint(-6,6)
-        dv = random.randint(-2,2)
-        su = [u + du for u in range(16,48)]
-        sv = [max(0, min(v + dv, 31)) for v in range(0,32)]
-        s =  np.ix_(sv,su)
-    return x_[:,:,s[0],s[1]]
-
 def decode_predicted_string(y):
-    "Decode the prediction of the character CNN into a string"
+    "Decode the C x W tensor `y` character predictions into a string"
     _, k = y.max(1)
     return [str(chr(c)) for c in (ord('a') + k).reshape(-1)]
 
 def plot_predicted_string(im, y):
-    "Plot the prediction of the character CNN"
+    "Plot the C x W tensor `y` character predictions overlaying them to the image `im`."
     chars = decode_predicted_string(y)
     plt.clf()
     plt.gcf().add_subplot(2,1,1)

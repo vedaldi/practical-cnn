@@ -5,27 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: test.py",
+            "name": "Python: pack_fonts",
             "type": "python",
             "request": "launch",
-            "pythonPath": "/Users/vedaldi/miniconda3/envs/deep/bin/pythonw", 
-            "program": "${workspaceFolder}/test.py"
+            "pythonPath": "${env:HOME}/miniconda3/envs/practical/bin/python",
+            "module": "extra.pack_fonts",
             "console": "integratedTerminal"
         },
         {
             "name": "Python: pretrain_models.py",
             "type": "python",
             "request": "launch",
-            "pythonPath": "/Users/vedaldi/miniconda3/envs/deep/bin/pythonw", 
+            "pythonPath": "${env:HOME}/miniconda3/envs/practical/bin/python",
             "module": "extra.pretrain_models",
             "console": "integratedTerminal"
         },
         {
-            "name": "Python: pack_fonts",
+            "name": "Python: scratch.py",
             "type": "python",
             "request": "launch",
-            "pythonPath": "/Users/vedaldi/miniconda3/envs/deep/bin/python", 
-            "module": "extra.pack_fonts",
+            "pythonPath": "${env:HOME}/miniconda3/envs/practical/bin/python",
+            "program": "${workspaceFolder}/extra/scratch.py",
             "console": "integratedTerminal"
         },
     ]

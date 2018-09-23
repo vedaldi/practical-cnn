@@ -1,14 +1,45 @@
-Convolutional neural network practical
-======================================
+Convolutional neural network practical (PyTorch version)
+========================================================
 
 A computer vision practical by the Oxford Visual Geometry group,
 authored by Andrea Vedaldi and Andrew Zisserman.
 
-This practical requires PyTorch and a number of other Python dependencies, such as MatPlotLib, NumPy, and PIL. The easiest way of installing all that is to install [Anaconda](https://www.anaconda.com/download/) for Python 3.6 and then to use the following commands:
+Running the practical on your local machine
+-------------------------------------------
 
-      conda env create -f practical.yaml
-      conda activate practical
-      jupyter notebook practical.ipynb
+*   Install the appropriate PyTorch environment. The easiest way is to install [Anaconda](https://www.anaconda.com/download/) or [Miniconda](https://conda.io/miniconda.html) and then crate the environment `practical` using the provided `pratical.yaml` configuration file, as follows:
+
+        conda env create -f practical.yaml
+
+    This step needs to be run only once.
+
+*   Activate the PyTorch environment for the current session:
+
+        conda activate practical
+
+*   Run the pratical
+
+        jupyter notebook practical.yaml
+
+Appendix: Installing from scratch
+---------------------------------
+
+*   Install and setup PyTorch as explained above.
+
+*   For **developers**, it is also recommended to install the `nbstripout` command:
+        
+        nbstripout --install
+
+    In this manner Git can strip the output data from the iPython notebook before checking in.
+
+*   For bootstrapping the data for the practical follow these steps:
+
+        cd practical-directory
+        ./extra/genfonts.sh              # Download the Google Fonts to ./extra/fonts
+        ./extra/genstring.sh             # Create data/sentence-lato.png
+        python3 -m extra.pack_fonts      # Create data/charsdb.pth
+        python3 -m extra.pretrain_models # Create data/model*.pth and data/alexnet.pth
+
 
 Package contents
 ----------------
@@ -42,14 +73,14 @@ in git using `nbstripout --install`.
 Changes
 -------
 
-* *2018a* - Rewrite for PyTorch.
+* *2018a* - PyTorch version.
 * *2017a* - Removes dependency on VLFeat and upgrades MatConvNet.
 * *2015a* - Initial edition.
 
 License
 -------
 
-    Copyright (c) 2015-18 Andrea Vedaldi
+    Copyright (c) 2015-18 Andrea Vedaldi and Andrew Zisserman.
     
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation

@@ -4,13 +4,9 @@ name ?= practical-cnn
 ver ?= pytorch-2018a
 
 code=\
-practica.pipynb \
+practical.ipynb \
 lab.py \
 README.md
-
-doc=\
-doc/images \
-doc/instructions.html
 
 data=\
 data/alexnet.pth \

@@ -35,6 +35,8 @@ Appendix: Installing from scratch
 *   For bootstrapping the data for the practical follow these steps:
 
         cd practical-directory
+        mkdir -p data                    # Make the data/ directory
+        cp extra/cover.png data/         # Copy the practical cover image
         ./extra/genfonts.sh              # Download the Google Fonts to ./extra/fonts
         ./extra/genstring.sh             # Create data/sentence-lato.png
         python3 -m extra.pack_fonts      # Create data/charsdb.pth

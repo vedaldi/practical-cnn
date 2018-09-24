@@ -10,6 +10,7 @@ practical.yaml \
 lab.py
 
 data=\
+data/cover.png \
 data/alexnet.pth \
 data/charscnn_jitter.pth \
 data/charscnn.pth \

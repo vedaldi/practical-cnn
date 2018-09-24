@@ -4,10 +4,10 @@ name ?= practical-cnn
 ver ?= pytorch-2018a
 
 code=\
+README.md \
 practical.ipynb \
 practical.yaml \
-lab.py \
-README.md
+lab.py
 
 data=\
 data/alexnet.pth \

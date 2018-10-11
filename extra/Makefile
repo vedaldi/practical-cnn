@@ -18,6 +18,8 @@ data/charsdb.pth \
 data/dots.jpg \
 data/imnet_classes.json \
 data/peppers.png \
+data/erc.jpg \
+data/epsrc.png \
 data/sentence-lato.png
 
 include extra/practical/Makefile
